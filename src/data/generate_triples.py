@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from collections import defaultdict
 import random
+import gzip
 
 import numpy as np
 import pandas as pd
@@ -40,15 +41,6 @@ def load_qrel(nrows):
     return qrel
 
 
-def load_top100_df(nrows):
-    doctrain_top100_df = pd.read_csv(
-        os.path.join(data_raw_dir, 'msmarco-doctrain-top100.gz'),
-        delimiter=' ',
-        names=['qid', 'Q0', 'docid', 'rank', 'score', 'runstring'],
-        nrows=nrows)
-    return doctrain_top100_df
-
-
 def load_docs(nrows):
     docs_df = pd.read_csv(
         os.path.join(data_raw_dir, 'msmarco-docs.tsv.gz'),
@@ -73,51 +65,42 @@ def generate_triples(triples_to_generate, nrows=10000):
     queries = load_queries(nrows)
     get_logger().info('Load qrel...')
     qrel = load_qrel(nrows)
-    get_logger().info('Load top100...')
-    top100_df = load_top100_df(nrows)
     get_logger().info('Load docs...')
     docs = load_docs(nrows)
 
     get_logger().info('Generate triples...')
     stats = defaultdict(int)
-    triples = []
-    for index, row in top100_df.sample(frac=1).iterrows():
-        qid, _, unjudged_docid, rank, _, _ = row
+    with gzip.open(os.path.join(data_raw_dir, 'msmarco-doctrain-top100.gz'), 'rt', encoding='utf8') as top100, \
+            open(os.path.join(data_processed_dir, 'triples.tsv'), 'w', encoding='utf8') as out:
+        for line in top100:
+            qid, _, unjudged_docid, rank, _, _ = line.split()
+            qid = int(qid)
 
-        if qid not in queries or qid not in qrel:
-            stats['skipped (query not found)'] += 1
-            continue
+            if qid not in queries or qid not in qrel:
+                stats['skipped (query not found)'] += 1
+                continue
 
-        positive_docid = random.choice(qrel[qid])
-        if positive_docid not in docs or unjudged_docid not in docs:
-            stats['skipped (doc not found)'] += 1
-            continue
+            positive_docid = random.choice(qrel[qid])
+            if positive_docid not in docs or unjudged_docid not in docs:
+                stats['skipped (doc not found)'] += 1
+                continue
 
-        if unjudged_docid in qrel[qid]:
-            stats['docid collisions'] += 1
-            continue
+            if unjudged_docid in qrel[qid]:
+                stats['docid collisions'] += 1
+                continue
 
-        stats['kept'] += 1
+            stats['kept'] += 1
 
-        triple = {
-            'qid': qid,
-            'query': queries[qid],
-            'positive_docid': positive_docid,
-            'negative_docid': unjudged_docid}
-        triples.append(triple)
+            out.write(f'{qid}\t{queries[qid]}\t{positive_docid}\t{unjudged_docid}\n')
 
-        triples_to_generate -= 1
-        if triples_to_generate <= 0:
-            break
+            triples_to_generate -= 1
+            if triples_to_generate <= 0:
+                break
 
     get_logger().info(dict(stats))
-    get_logger().info(f'{len(triples)} triples were generated')
-
-    triples_df = pd.DataFrame(triples)
-    triples_df.to_csv(os.path.join(data_processed_dir, 'triples.csv'), index=False)
     get_logger().info('Done')
 
 
 if __name__ == '__main__':
     create_logger()
-    generate_triples(100000, nrows=None)
+    generate_triples(1000, nrows=None)
