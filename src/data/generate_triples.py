@@ -18,27 +18,27 @@ data_processed_dir = os.path.join(project_dir, 'data', 'processed')
 
 
 def load_queries(nrows):
-    doctrain_queries_df = pd.read_csv(
+    queries_df = pd.read_csv(
         os.path.join(data_raw_dir, 'msmarco-doctrain-queries.tsv.gz'),
         delimiter='\t',
         names=['qid', 'query'],
         nrows=nrows)
     queries = {}
-    for index, row in doctrain_queries_df.iterrows():
+    for index, row in queries_df.iterrows():
         queries[row['qid']] = row['query']
     return queries
 
 
 def load_qrel(nrows):
-    doctrain_qrels_df = pd.read_csv(
+    qrels_df = pd.read_csv(
         os.path.join(data_raw_dir, 'msmarco-doctrain-qrels.tsv.gz'),
         delimiter=' ',
         names=['qid', '_', 'docid', 'rel'],
         nrows=nrows)
-    qrel = defaultdict(list)
-    for index, row in doctrain_qrels_df.iterrows():
-        qrel[row['qid']].append(row['docid'])
-    return qrel
+    qrels = defaultdict(list)
+    for index, row in qrels_df.iterrows():
+        qrels[row['qid']].append(row['docid'])
+    return qrels
 
 
 def load_docs(nrows):
@@ -64,7 +64,7 @@ def generate_triples(triples_to_generate, nrows=10000):
     get_logger().info('Load queries...')
     queries = load_queries(nrows)
     get_logger().info('Load qrel...')
-    qrel = load_qrel(nrows)
+    qrels = load_qrel(nrows)
     get_logger().info('Load docs...')
     docs = load_docs(nrows)
 
@@ -76,16 +76,16 @@ def generate_triples(triples_to_generate, nrows=10000):
             qid, _, unjudged_docid, rank, _, _ = line.split()
             qid = int(qid)
 
-            if qid not in queries or qid not in qrel:
+            if qid not in queries or qid not in qrels:
                 stats['skipped (query not found)'] += 1
                 continue
 
-            positive_docid = random.choice(qrel[qid])
+            positive_docid = random.choice(qrels[qid])
             if positive_docid not in docs or unjudged_docid not in docs:
                 stats['skipped (doc not found)'] += 1
                 continue
 
-            if unjudged_docid in qrel[qid]:
+            if unjudged_docid in qrels[qid]:
                 stats['docid collisions'] += 1
                 continue
 
