@@ -85,4 +85,5 @@ target/
 # Mypy cache
 .mypy_cache/
 
+pip-wheel-metadata/
 secret_notebooks/

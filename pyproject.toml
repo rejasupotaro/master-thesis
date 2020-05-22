@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["Kentaro Takiguchi"]
+
+[tool.poetry.dependencies]
+# poetry run pip install -e .
+python = "3.8.2"
+numpy = "^1.18.4"
+pandas = "^1.0.3"
+tensorflow = "^2.2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.4"
+jupyter = "^1.0.0"
+
