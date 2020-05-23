@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from src.utils.logger import create_logger, get_logger
@@ -27,7 +28,7 @@ def preprocess_query(query):
     return str(query).replace('"', '')
 
 
-def generate_triples(n_queries=100, max_positives_per_query=100):
+def generate_triples(n_queries=100, max_positives_per_query=100, train_size=0.8):
     get_logger().info('Load available recipe IDs')
     available_recipe_ids = get_available_recipe_ids()
 
@@ -70,6 +71,15 @@ def generate_triples(n_queries=100, max_positives_per_query=100):
     with open(os.path.join('data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.pkl'),
               'wb') as file:
         pickle.dump(triples, file)
+
+    get_logger().info('Split triples')
+    train_triples, test_triples = train_test_split(triples, train_size=0.8, shuffle=True)
+    with open(os.path.join('data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.train.pkl'),
+              'wb') as file:
+        pickle.dump(train_triples, file)
+    with open(os.path.join('data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.test.pkl'),
+              'wb') as file:
+        pickle.dump(test_triples, file)
     get_logger().info('Done')
 
 
