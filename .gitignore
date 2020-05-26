@@ -85,5 +85,6 @@ target/
 # Mypy cache
 .mypy_cache/
 
+.venv/
 pip-wheel-metadata/
 secret_notebooks/
