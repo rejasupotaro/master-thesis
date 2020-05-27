@@ -34,8 +34,6 @@ def process(triples_filename):
         sentences += df[key].tolist()
     tokenizer = Tokenizer(oov_token=oov_token)
     tokenizer.fit_on_texts(sentences)
-    word_index = tokenizer.word_index
-    total_words = len(tokenizer.word_index) + 1
 
     df['query_word_ids'] = tokenizer.texts_to_sequences(df['query'].tolist())
     df['positive_title_word_ids'] = tokenizer.texts_to_sequences(df['positive_title'].tolist())
