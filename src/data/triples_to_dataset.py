@@ -112,6 +112,4 @@ def process(triples_filename):
 
 
 if __name__ == '__main__':
-    with open('../data/processed/triples_100_100.train.pkl', 'rb') as file:
-        triples = pickle.load(file)
-    process(triples)
+    process('triples_100_100.train.pkl')
