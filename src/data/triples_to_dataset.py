@@ -93,7 +93,7 @@ def process(triples_filename):
             'query_word_ids': query_word_ids,
             'title_word_ids': title_word_ids,
             'desc_word_ids': desc_word_ids,
-            'countries': countries
+            'country': countries
         },
         {'relevance': relevance}
     )).batch(32).shuffle(buffer_size=1000)
@@ -103,7 +103,7 @@ def process(triples_filename):
             'query_word_ids': query_word_ids,
             'title_word_ids': title_word_ids,
             'desc_word_ids': desc_word_ids,
-            'countries': countries
+            'country': countries
         },
         {'relevance': relevance}
     )).batch(32)

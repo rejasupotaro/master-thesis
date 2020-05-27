@@ -7,7 +7,7 @@ def build_model(embedding_dim):
     query_input = keras.Input(shape=(6,), dtype=tf.int32, name='query_word_ids')
     title_input = keras.Input(shape=(20,), dtype=tf.int32, name='title_word_ids')
     desc_input = keras.Input(shape=(500,), dtype=tf.int32, name='desc_word_ids')
-    country_input = keras.Input(shape=(1,), dtype=tf.int32, name='countries')
+    country_input = keras.Input(shape=(1,), dtype=tf.int32, name='country')
 
     embedding = layers.Embedding(embedding_dim, 64)
     query_features = embedding(query_input)
