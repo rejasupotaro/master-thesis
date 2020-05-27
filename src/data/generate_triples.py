@@ -28,12 +28,8 @@ def preprocess_query(query):
     return str(query).replace('"', '')
 
 
-def generate_triples(n_queries=100, max_positives_per_query=100, train_size=0.8):
-    get_logger().info('Load available recipe IDs')
-    available_recipe_ids = get_available_recipe_ids()
-
+def generate_triples(interactions_df, available_recipe_ids, n_queries, max_positives_per_query):
     get_logger().info('Extract popular queries')
-    interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'))
     interactions_df['processed_query'] = interactions_df['query'].apply(preprocess_query)
     queries_df = interactions_df[['processed_query']].groupby('processed_query').size().reset_index(name='count')
     queries_df = queries_df.sort_values('count', ascending=False)
@@ -48,8 +44,6 @@ def generate_triples(n_queries=100, max_positives_per_query=100, train_size=0.8)
         query = row['processed_query']
         doc_id = row['recipe_id']
         qrels[query].append(doc_id)
-    with open(os.path.join('data', 'processed', f'qrels_{n_queries}.pkl'), 'wb') as file:
-        pickle.dump(qrels, file)
 
     get_logger().info('Generate triples')
     doc_ids = list({doc_id for sublist in list(qrels.values()) for doc_id in sublist})
@@ -58,9 +52,7 @@ def generate_triples(n_queries=100, max_positives_per_query=100, train_size=0.8)
         positive_doc_ids = qrels[query]
         random.shuffle(positive_doc_ids)
         for positive_doc_id in positive_doc_ids[:max_positives_per_query]:
-            triple = {}
-            triple['query'] = query
-            triple['positive_doc_id'] = positive_doc_id
+            triple = {'query': query, 'positive_doc_id': positive_doc_id}
             while True:
                 negative_doc_id = random.choice(doc_ids)
                 if negative_doc_id not in positive_doc_ids:
@@ -68,16 +60,31 @@ def generate_triples(n_queries=100, max_positives_per_query=100, train_size=0.8)
                     break
             triples.append(triple)
     get_logger().info(f'{len(triples)} triples generated')
-    with open(os.path.join('data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.pkl'),
-              'wb') as file:
-        pickle.dump(triples, file)
 
-    get_logger().info('Split triples')
-    train_triples, test_triples = train_test_split(triples, train_size=0.8, shuffle=True)
-    with open(os.path.join('data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.train.pkl'),
+    return qrels, triples
+
+
+def generate(train_size=0.8, n_queries=100, max_positives_per_query=100):
+    get_logger().info('Load available recipe IDs')
+    available_recipe_ids = get_available_recipe_ids()
+
+    interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'))
+    interactions_df = interactions_df.sample(frac=1)
+    train_df, test_df = train_test_split(interactions_df, train_size=train_size)
+
+    get_logger().info('Generate triples for training')
+    train_qrels, train_triples = generate_triples(train_df, available_recipe_ids, n_queries, max_positives_per_query)
+    with open(os.path.join(project_dir, 'data', 'processed', f'qrels_{n_queries}.train.pkl'), 'wb') as file:
+        pickle.dump(train_qrels, file)
+    with open(os.path.join(project_dir, 'data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.train.pkl'),
               'wb') as file:
         pickle.dump(train_triples, file)
-    with open(os.path.join('data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.test.pkl'),
+
+    get_logger().info('Generate triples for testing')
+    test_qrels, test_triples = generate_triples(test_df, available_recipe_ids, n_queries, max_positives_per_query)
+    with open(os.path.join(project_dir, 'data', 'processed', f'qrels_{n_queries}.test.pkl'), 'wb') as file:
+        pickle.dump(train_qrels, file)
+    with open(os.path.join(project_dir, 'data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.test.pkl'),
               'wb') as file:
         pickle.dump(test_triples, file)
     get_logger().info('Done')
@@ -86,4 +93,4 @@ def generate_triples(n_queries=100, max_positives_per_query=100, train_size=0.8)
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    generate_triples()
+    generate()

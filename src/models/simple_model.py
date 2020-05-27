@@ -3,17 +3,17 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
-def build_model(embedding_dim):
+def build_model(total_words, total_countries):
     query_input = keras.Input(shape=(6,), dtype=tf.int32, name='query_word_ids')
     title_input = keras.Input(shape=(20,), dtype=tf.int32, name='title_word_ids')
     desc_input = keras.Input(shape=(500,), dtype=tf.int32, name='desc_word_ids')
     country_input = keras.Input(shape=(1,), dtype=tf.int32, name='country')
 
-    embedding = layers.Embedding(embedding_dim, 64)
+    embedding = layers.Embedding(total_words, 64)
     query_features = embedding(query_input)
     title_features = embedding(title_input)
     desc_features = embedding(desc_input)
-    country_features = layers.Embedding(11, 8)(country_input)
+    country_features = layers.Embedding(total_countries, 8)(country_input)
 
     query_features = layers.GlobalAveragePooling1D()(query_features)
     title_features = layers.GlobalAveragePooling1D()(title_features)
