@@ -1,7 +1,9 @@
+import datetime
 import os
 import pickle
 from pathlib import Path
 
+import tensorflow as tf
 from tensorflow import keras
 
 from src.data import triples_to_dataset
@@ -12,12 +14,15 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def train(model, train_dataset, test_dataset, epochs):
+def train_model(model, train_dataset, test_dataset, epochs):
     get_logger().info('Train model')
+    log_dir = os.path.join(project_dir, 'logs', 'fit', datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     history = model.fit(
         train_dataset,
         epochs=epochs,
-        validation_data=test_dataset
+        validation_data=test_dataset,
+        callbacks=[tensorboard_callback]
     )
 
     get_logger().info('Save model')
@@ -26,10 +31,7 @@ def train(model, train_dataset, test_dataset, epochs):
     get_logger().info('Done')
 
 
-if __name__ == '__main__':
-    create_logger()
-    set_seed()
-
+def train():
     get_logger().info('Convert triples into dataset')
     train_dataset, tokenizer, country_encoder = triples_to_dataset.process('triples_100_100.train.pkl')
     with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'wb') as file:
@@ -44,10 +46,17 @@ if __name__ == '__main__':
     get_logger().info('Build model')
     model = simple_model.build_model(total_words, total_countries)
     model.summary()
+
     model.compile(
         optimizer=keras.optimizers.Adam(),
         loss={'relevance': keras.losses.BinaryCrossentropy(from_logits=True)},
         metrics=['accuracy']
     )
 
-    train(model, train_dataset, test_dataset, epochs=10)
+    train_model(model, train_dataset, test_dataset, epochs=10)
+
+
+if __name__ == '__main__':
+    create_logger()
+    set_seed()
+    train()

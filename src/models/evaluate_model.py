@@ -11,7 +11,7 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def evaluate(model, dataset):
+def evaluate_model(model, dataset):
     get_logger().info('Evaluate model')
     test_loss, test_acc = model.evaluate(dataset)
     print('Test Loss: {}'.format(test_loss))
@@ -34,4 +34,4 @@ if __name__ == '__main__':
     project_dir = Path(__file__).resolve().parents[2]
     model = tf.keras.models.load_model(os.path.join(project_dir, 'models', 'model.h5'))
 
-    evaluate(model, dataset)
+    evaluate_model(model, dataset)
