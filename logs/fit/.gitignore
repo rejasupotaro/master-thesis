@@ -2,4 +2,3 @@
 *
 # except files below
 !.gitignore
-!fit/
