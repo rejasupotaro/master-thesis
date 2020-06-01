@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from src.data import triples_to_dataset
-from src.models import simple_model
+from src.models import simple_model, nrmf
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
@@ -31,20 +31,21 @@ def train_model(model, train_dataset, test_dataset, epochs):
     get_logger().info('Done')
 
 
-def train():
+def train(build_model_fn):
     get_logger().info('Convert triples into dataset')
     train_dataset, tokenizer, country_encoder = triples_to_dataset.process('triples_100_100.train.pkl')
     with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'wb') as file:
         pickle.dump(tokenizer, file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'wb') as file:
         pickle.dump(country_encoder, file)
-    total_words = len(tokenizer.word_index) + 1
+    # total_words = len(tokenizer.word_index) + 1
+    total_words = 40
     total_countries = len(country_encoder.classes_)
 
     test_dataset, _, _ = triples_to_dataset.process('triples_100_100.test.pkl', tokenizer, country_encoder)
 
     get_logger().info('Build model')
-    model = simple_model.build_model(total_words, total_countries)
+    model = build_model_fn(total_words, total_countries)
     model.summary()
 
     model.compile(
@@ -53,10 +54,10 @@ def train():
         metrics=['accuracy']
     )
 
-    train_model(model, train_dataset, test_dataset, epochs=10)
+    train_model(model, train_dataset, test_dataset, epochs=2)
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train()
+    train(nrmf.build_model)

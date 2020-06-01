@@ -12,7 +12,7 @@ six = "*"
 [[package]]
 category = "main"
 description = "Disable App Nap on OS X 10.9"
-marker = "python_version >= \"3.3\" and sys_platform == \"darwin\" or platform_system == \"Darwin\""
+marker = "sys_platform == \"darwin\" or platform_system == \"Darwin\" or python_version >= \"3.3\" and sys_platform == \"darwin\""
 name = "appnope"
 optional = false
 python-versions = "*"
@@ -55,7 +55,6 @@ tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.i
 [[package]]
 category = "main"
 description = "Specifications for callback functions passed in to an API"
-marker = "python_version >= \"3.3\""
 name = "backcall"
 optional = false
 python-versions = "*"
@@ -325,7 +324,6 @@ test = ["pytest (>=3.6.0)", "pytest-cov", "mock"]
 [[package]]
 category = "main"
 description = "An autocompletion tool for Python that can be used for text editors."
-marker = "python_version >= \"3.3\""
 name = "jedi"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
@@ -719,7 +717,7 @@ testing = ["docopt", "pytest (>=3.0.7)"]
 [[package]]
 category = "main"
 description = "Pexpect allows easy control of interactive console applications."
-marker = "python_version >= \"3.3\" and sys_platform != \"win32\""
+marker = "python_version >= \"3.3\" and sys_platform != \"win32\" or sys_platform != \"win32\""
 name = "pexpect"
 optional = false
 python-versions = "*"
@@ -731,7 +729,6 @@ ptyprocess = ">=0.5"
 [[package]]
 category = "main"
 description = "Tiny 'shelve'-like database with concurrency support"
-marker = "python_version >= \"3.3\""
 name = "pickleshare"
 optional = false
 python-versions = "*"
@@ -1150,6 +1147,21 @@ version = "2.2.0"
 
 [[package]]
 category = "main"
+description = "TF.Text is a TensorFlow library of text related ops, modules, and subgraphs."
+name = "tensorflow-text"
+optional = false
+python-versions = "*"
+version = "2.2.0"
+
+[package.dependencies]
+tensorflow = ">=2.2.0,<2.3"
+
+[package.extras]
+tensorflow_gpu = ["tensorflow-gpu (>=2.2.0,<2.3)"]
+tests = ["absl-py", "pytest"]
+
+[[package]]
+category = "main"
 description = "ANSII Color formatting for output in terminal."
 name = "termcolor"
 optional = false
@@ -1295,7 +1307,7 @@ python-versions = "*"
 version = "1.12.1"
 
 [metadata]
-content-hash = "b39e19b45299d89eac563782c01f1f930321ff54de268839cc37291772ea4f4a"
+content-hash = "a5363cb8a9dd0b508fdd220d59160c1345fe40e79998544f7d1811fe1bc235bf"
 python-versions = "3.8.2"
 
 [metadata.files]
@@ -1932,6 +1944,14 @@ tensorflow = [
 ]
 tensorflow-estimator = [
     {file = "tensorflow_estimator-2.2.0-py2.py3-none-any.whl", hash = "sha256:d09dacdd127f2579cea8d5af21f4a918036b8ae246adc82f26b61f91cc247dc2"},
+]
+tensorflow-text = [
+    {file = "tensorflow_text-2.2.0-cp35-cp35m-macosx_10_9_x86_64.whl", hash = "sha256:11a9042afe677bc826aa644fdbfbcea6ee79fd458158fafbac60ea586538b1e6"},
+    {file = "tensorflow_text-2.2.0-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:e7f4952ebb958d56e4c2595ee4d9afa460447bb230cc04f694fd4ae7276fd028"},
+    {file = "tensorflow_text-2.2.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:07d3a238cc94f9c070fa27a76f559d2ee433bb04832bf5498adba62a89289aec"},
+    {file = "tensorflow_text-2.2.0-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:53217438cbd69126a0c13a4e4ef6d0adb714dbe6ba5cfecff50949e3ccaa6759"},
+    {file = "tensorflow_text-2.2.0-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:e64b081a265b4bc53cecb12c78c86ac9f971f1bc9513ceee38bf92f907d12a06"},
+    {file = "tensorflow_text-2.2.0-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:b18af6649a32edb6a1b3a4a7a1d75f997cea13d582ac8e260801b56a904280a9"},
 ]
 termcolor = [
     {file = "termcolor-1.1.0.tar.gz", hash = "sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b"},

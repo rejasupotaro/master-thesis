@@ -19,28 +19,37 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
     recipes = load_recipes()
     df = pd.DataFrame(triples)
 
-    df['positive_title'] = df['positive_doc_id'].apply(lambda doc_id: recipes[doc_id]['title'])
-    df['negative_title'] = df['negative_doc_id'].apply(lambda doc_id: recipes[doc_id]['title'])
-    df['positive_desc'] = df['positive_doc_id'].apply(lambda doc_id: recipes[doc_id]['story_or_description'])
-    df['positive_desc'] = df['positive_desc'].fillna('')
-    df['negative_desc'] = df['negative_doc_id'].apply(lambda doc_id: recipes[doc_id]['story_or_description'])
-    df['negative_desc'] = df['negative_desc'].fillna('')
-    df['positive_country'] = df['positive_doc_id'].apply(lambda doc_id: recipes[doc_id]['country'])
-    df['negative_country'] = df['negative_doc_id'].apply(lambda doc_id: recipes[doc_id]['country'])
+    for sample in ['positive', 'negative']:
+        df[f'{sample}_title'] = df[f'{sample}_doc_id'].apply(lambda doc_id: recipes[doc_id]['title'])
+        df[f'{sample}_ingredients'] = df[f'{sample}_doc_id'].apply(lambda doc_id: recipes[doc_id]['ingredients'])
+        df[f'{sample}_ingredients'] = df[f'{sample}_ingredients'].apply(lambda ingredients: ' '.join(ingredients))
+        df[f'{sample}_desc'] = df[f'{sample}_doc_id'].apply(lambda doc_id: recipes[doc_id]['story_or_description'])
+        df[f'{sample}_desc'] = df[f'{sample}_desc'].fillna('')
+        df[f'{sample}_country'] = df[f'{sample}_doc_id'].apply(lambda doc_id: recipes[doc_id]['country'])
 
+    features = [
+        'positive_title',
+        'negative_title',
+        'positive_ingredients',
+        'negative_ingredients',
+        'positive_desc',
+        'negative_desc'
+    ]
     if not tokenizer:
         oov_token = '<OOV>'
         sentences = []
-        for key in ['query', 'positive_title', 'negative_title', 'positive_desc', 'negative_desc']:
+        for key in ['query'] + features:
             sentences += df[key].tolist()
-        tokenizer = Tokenizer(oov_token=oov_token)
+        tokenizer = Tokenizer(
+            oov_token=oov_token,
+            num_words=30,
+            char_level=True
+        )
         tokenizer.fit_on_texts(sentences)
 
     df['query_word_ids'] = tokenizer.texts_to_sequences(df['query'].tolist())
-    df['positive_title_word_ids'] = tokenizer.texts_to_sequences(df['positive_title'].tolist())
-    df['negative_title_word_ids'] = tokenizer.texts_to_sequences(df['negative_title'].tolist())
-    df['positive_desc_word_ids'] = tokenizer.texts_to_sequences(df['positive_desc'].tolist())
-    df['negative_desc_word_ids'] = tokenizer.texts_to_sequences(df['negative_desc'].tolist())
+    for feature in features:
+        df[f'{feature}_word_ids'] = tokenizer.texts_to_sequences(df[feature].tolist())
 
     if not country_encoder:
         country_encoder = LabelEncoder()
@@ -60,24 +69,34 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
     positive_title_word_ids = pad_sequences(positive_title_word_ids,
                                             padding='post',
                                             truncating='post',
-                                            maxlen=20)
+                                            maxlen=120)
+    positive_ingredients_word_ids = df['positive_ingredients_word_ids'].tolist()
+    positive_ingredients_word_ids = pad_sequences(positive_ingredients_word_ids,
+                                                  padding='post',
+                                                  truncating='post',
+                                                  maxlen=1500)
     positive_desc_word_ids = df['positive_desc_word_ids'].tolist()
     positive_desc_word_ids = pad_sequences(positive_desc_word_ids,
                                            padding='post',
                                            truncating='post',
-                                           maxlen=500)
+                                           maxlen=3000)
     positive_countries = df['positive_country'].tolist()
 
     negative_title_word_ids = df['negative_title_word_ids'].tolist()
     negative_title_word_ids = pad_sequences(negative_title_word_ids,
                                             padding='post',
                                             truncating='post',
-                                            maxlen=20)
+                                            maxlen=120)
+    negative_ingredients_word_ids = df['negative_ingredients_word_ids'].tolist()
+    negative_ingredients_word_ids = pad_sequences(negative_ingredients_word_ids,
+                                                  padding='post',
+                                                  truncating='post',
+                                                  maxlen=1500)
     negative_desc_word_ids = df['negative_desc_word_ids'].tolist()
     negative_desc_word_ids = pad_sequences(negative_desc_word_ids,
                                            padding='post',
                                            truncating='post',
-                                           maxlen=500)
+                                           maxlen=3000)
     negative_countries = df['negative_country'].tolist()
 
     positive_relevance = np.array([1] * len(query_word_ids)).reshape(-1, 1)
@@ -85,6 +104,7 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
 
     query_word_ids = np.concatenate((query_word_ids, query_word_ids), axis=0)
     title_word_ids = np.concatenate((positive_title_word_ids, negative_title_word_ids), axis=0)
+    ingredients_word_ids = np.concatenate((positive_ingredients_word_ids, negative_ingredients_word_ids), axis=0)
     desc_word_ids = np.concatenate((positive_desc_word_ids, negative_desc_word_ids), axis=0)
     countries = np.concatenate((positive_countries, negative_countries), axis=0)
     relevance = np.concatenate((positive_relevance, negative_relevance), axis=0)
@@ -93,6 +113,7 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
         {
             'query_word_ids': query_word_ids,
             'title_word_ids': title_word_ids,
+            'ingredients_word_ids': ingredients_word_ids,
             'desc_word_ids': desc_word_ids,
             'country': countries
         },

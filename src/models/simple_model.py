@@ -13,14 +13,18 @@ def build_model(total_words, total_countries):
     query_features = embedding(query_input)
     title_features = embedding(title_input)
     desc_features = embedding(desc_input)
-    country_features = layers.Embedding(total_countries, 8)(country_input)
+    country_features = layers.Embedding(total_countries, 64)(country_input)
 
     query_features = layers.GlobalAveragePooling1D()(query_features)
     title_features = layers.GlobalAveragePooling1D()(title_features)
     desc_features = layers.GlobalAveragePooling1D()(desc_features)
-    country_features = tf.reshape(country_features, shape=(-1, 8,))
+    country_features = tf.reshape(country_features, shape=(-1, 64,))
 
-    x = layers.concatenate([query_features, title_features, desc_features, country_features])
+    query_title_features = tf.multiply(query_features, title_features)
+    query_desc_features = tf.multiply(query_features, desc_features)
+    query_country_features = tf.multiply(query_features, country_features)
+
+    x = layers.concatenate([query_title_features, query_desc_features, query_country_features])
     x = layers.Dense(32, activation='relu')(x)
     output = layers.Dense(1, activation='sigmoid', name='relevance')(x)
 
