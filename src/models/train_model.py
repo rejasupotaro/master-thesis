@@ -14,6 +14,17 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[2]
 
 
+def pairwise_loss(y_true, y_pred):
+    y_true = tf.cast(y_true, tf.int32)
+    parts = tf.dynamic_partition(y_pred, y_true, 2)
+    y_pos = parts[1]
+    y_neg = parts[0]
+    y_pos = tf.expand_dims(y_pos, 0)
+    y_neg = tf.expand_dims(y_neg, -1)
+    output = tf.sigmoid(y_neg - y_pos)
+    return tf.reduce_mean(output, axis=-1)
+
+
 def train_model(model, train_dataset, test_dataset, epochs):
     get_logger().info('Train model')
     log_dir = os.path.join(project_dir, 'logs', 'fit', datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
@@ -50,14 +61,14 @@ def train(build_model_fn):
 
     model.compile(
         optimizer=keras.optimizers.Adam(),
-        loss={'relevance': keras.losses.BinaryCrossentropy(from_logits=True)},
+        loss={'label': pairwise_loss},
         metrics=['accuracy']
     )
 
-    train_model(model, train_dataset, test_dataset, epochs=2)
+    train_model(model, train_dataset, test_dataset, epochs=10)
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train(nrmf.build_model)
+    train(simple_model.build_model)
