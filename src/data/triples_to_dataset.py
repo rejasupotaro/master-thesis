@@ -67,7 +67,7 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
                                    truncating='post',
                                    maxlen=120)
     ingredients_word_ids = df['ingredients_word_ids'].tolist()
-    ingredients_word_ids = pad_sequences(title_word_ids,
+    ingredients_word_ids = pad_sequences(ingredients_word_ids,
                                    padding='post',
                                    truncating='post',
                                    maxlen=1500)
