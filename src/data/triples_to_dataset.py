@@ -41,8 +41,7 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
             sentences += df[key].tolist()
         tokenizer = Tokenizer(
             oov_token=oov_token,
-            num_words=30,
-            char_level=True
+            char_level=False
         )
         tokenizer.fit_on_texts(sentences)
 
@@ -59,18 +58,18 @@ def process(triples_filename, tokenizer=None, country_encoder=None):
     query_word_ids = pad_sequences(query_word_ids,
                                    padding='post',
                                    truncating='post',
-                                   maxlen=50)
+                                   maxlen=6)
 
     title_word_ids = df['title_word_ids'].tolist()
     title_word_ids = pad_sequences(title_word_ids,
                                    padding='post',
                                    truncating='post',
-                                   maxlen=120)
+                                   maxlen=20)
     ingredients_word_ids = df['ingredients_word_ids'].tolist()
     ingredients_word_ids = pad_sequences(ingredients_word_ids,
                                    padding='post',
                                    truncating='post',
-                                   maxlen=1500)
+                                   maxlen=300)
     country = df['country'].tolist()
     label = df['label'].tolist()
 

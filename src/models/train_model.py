@@ -39,8 +39,7 @@ def train(build_model_fn):
         pickle.dump(tokenizer, file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'wb') as file:
         pickle.dump(country_encoder, file)
-    # total_words = len(tokenizer.word_index) + 1
-    total_words = 40
+    total_words = len(tokenizer.word_index) + 1
     total_countries = len(country_encoder.classes_)
 
     test_dataset, _, _ = triples_to_dataset.process('triples_100_100.test.pkl', tokenizer, country_encoder)
@@ -61,4 +60,4 @@ def train(build_model_fn):
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train(nrmf.build_model)
+    train(simple_model.build_model)
