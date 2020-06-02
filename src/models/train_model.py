@@ -8,21 +8,11 @@ from tensorflow import keras
 
 from src.data import triples_to_dataset
 from src.models import simple_model, nrmf
+from src.losses import pairwise_losses
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[2]
-
-
-def pairwise_loss(y_true, y_pred):
-    y_true = tf.cast(y_true, tf.int32)
-    parts = tf.dynamic_partition(y_pred, y_true, 2)
-    y_pos = parts[1]
-    y_neg = parts[0]
-    y_pos = tf.expand_dims(y_pos, 0)
-    y_neg = tf.expand_dims(y_neg, -1)
-    output = tf.sigmoid(y_neg - y_pos)
-    return tf.reduce_mean(output, axis=-1)
 
 
 def train_model(model, train_dataset, test_dataset, epochs):
@@ -61,7 +51,7 @@ def train(build_model_fn):
 
     model.compile(
         optimizer=keras.optimizers.Adam(),
-        loss={'label': pairwise_loss},
+        loss={'label': pairwise_losses.cross_entropy_loss},
         metrics=['accuracy']
     )
 
@@ -71,4 +61,4 @@ def train(build_model_fn):
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train(simple_model.build_model)
+    train(nrmf.build_model)
