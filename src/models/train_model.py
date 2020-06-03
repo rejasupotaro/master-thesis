@@ -6,7 +6,7 @@ from pathlib import Path
 import tensorflow as tf
 from tensorflow import keras
 
-from src.data import triples_to_dataset
+from src.data import triples_to_dataset_concat, triples_to_dataset_multiple
 from src.models import simple_model, nrmf
 from src.losses import pairwise_losses
 from src.utils.logger import create_logger, get_logger
@@ -34,7 +34,8 @@ def train_model(model, train_dataset, test_dataset, epochs):
 
 def train(build_model_fn):
     get_logger().info('Convert triples into dataset')
-    train_dataset, tokenizer, country_encoder = triples_to_dataset.process('triples_100_100.train.pkl')
+    data_processor = triples_to_dataset_multiple
+    train_dataset, tokenizer, country_encoder = data_processor.process('triples_100_100.train.pkl')
     with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'wb') as file:
         pickle.dump(tokenizer, file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'wb') as file:
@@ -42,7 +43,7 @@ def train(build_model_fn):
     total_words = len(tokenizer.word_index) + 1
     total_countries = len(country_encoder.classes_)
 
-    test_dataset, _, _ = triples_to_dataset.process('triples_100_100.test.pkl', tokenizer, country_encoder)
+    test_dataset, _, _ = data_processor.process('triples_100_100.test.pkl', tokenizer, country_encoder)
 
     get_logger().info('Build model')
     model = build_model_fn(total_words, total_countries)
@@ -60,4 +61,4 @@ def train(build_model_fn):
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train(simple_model.build_model)
+    train(nrmf.build_model)

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import tensorflow as tf
 
-from src.data import triples_to_dataset
+from src.data import triples_to_dataset_concat
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
         tokenizer = pickle.load(file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'rb') as file:
         country_encoder = pickle.load(file)
-    dataset, _, _ = triples_to_dataset.process(triples_filename, tokenizer, country_encoder)
+    dataset, _, _ = triples_to_dataset_concat.process(triples_filename, tokenizer, country_encoder)
 
     get_logger().info('Load model')
     project_dir = Path(__file__).resolve().parents[2]

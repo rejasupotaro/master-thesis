@@ -19,7 +19,7 @@ def ngram_block(n, total_words):
 def build_model(total_words, total_countries):
     query_input = keras.Input(shape=(6,), name='query_word_ids')
     title_input = keras.Input(shape=(20,), name='title_word_ids')
-    ingredients_input = keras.Input(shape=(300,), name='ingredients_word_ids')
+    ingredients_input = keras.Input(shape=(60,50,), dtype=tf.int32, name='ingredients_word_ids')
     country_input = keras.Input(shape=(1,), name='country')
 
     # ngram = 2
@@ -39,7 +39,8 @@ def build_model(total_words, total_countries):
     #     ingredients_features = layers.GlobalAveragePooling1D()(ingredients_features)
     query_features = tf.reduce_mean(layers.Conv1D(64, 3, activation='relu')(query_features), axis=1)
     title_features = tf.reduce_mean(layers.Conv1D(64, 3, activation='relu')(title_features), axis=1)
-    ingredients_features = tf.reduce_mean(layers.Conv1D(64, 3, activation='relu')(ingredients_features), axis=1)
+    ingredients_features = layers.Conv2D(64, 3, activation='relu')(ingredients_features)
+    ingredients_features = layers.GlobalAveragePooling2D()(ingredients_features)
     country_features = tf.reshape(country_features, shape=(-1, 64,))
 
     query_title_features = tf.multiply(query_features, title_features)
