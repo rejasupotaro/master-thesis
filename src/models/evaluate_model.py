@@ -28,7 +28,7 @@ if __name__ == '__main__':
         tokenizer = pickle.load(file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'rb') as file:
         country_encoder = pickle.load(file)
-    dataset, _, _ = triples_to_dataset_concat.process(triples_filename, tokenizer, country_encoder)
+    dataset, _, _ = triples_to_dataset_concat.process_triples(triples_filename, tokenizer, country_encoder)
 
     get_logger().info('Load model')
     project_dir = Path(__file__).resolve().parents[2]

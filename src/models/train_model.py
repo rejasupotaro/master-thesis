@@ -35,7 +35,7 @@ def train_model(model, train_dataset, test_dataset, epochs):
 def train(build_model_fn):
     get_logger().info('Convert triples into dataset')
     data_processor = triples_to_dataset_multiple
-    train_dataset, tokenizer, country_encoder = data_processor.process('triples_100_100.train.pkl')
+    train_dataset, tokenizer, country_encoder = data_processor.process_triples('triples_100_100.train.pkl')
     with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'wb') as file:
         pickle.dump(tokenizer, file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'wb') as file:
@@ -43,7 +43,7 @@ def train(build_model_fn):
     total_words = len(tokenizer.word_index) + 1
     total_countries = len(country_encoder.classes_)
 
-    test_dataset, _, _ = data_processor.process('triples_100_100.test.pkl', tokenizer, country_encoder)
+    test_dataset, _, _ = data_processor.process_triples('triples_100_100.test.pkl', tokenizer, country_encoder)
 
     get_logger().info('Build model')
     model = build_model_fn(total_words, total_countries)
@@ -55,7 +55,7 @@ def train(build_model_fn):
         metrics=['accuracy']
     )
 
-    train_model(model, train_dataset, test_dataset, epochs=10)
+    train_model(model, train_dataset, test_dataset, epochs=3)
 
 
 if __name__ == '__main__':
