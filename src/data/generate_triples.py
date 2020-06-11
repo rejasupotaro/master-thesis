@@ -9,6 +9,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+from src.data import queries
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
@@ -24,16 +25,9 @@ def get_available_recipe_ids():
     return recipe_ids
 
 
-def preprocess_query(query):
-    return str(query).replace('"', '')
-
-
 def generate_triples(interactions_df, available_recipe_ids, n_queries, max_positives_per_query):
     get_logger().info('Extract popular queries')
-    interactions_df['processed_query'] = interactions_df['query'].apply(preprocess_query)
-    queries_df = interactions_df[['processed_query']].groupby('processed_query').size().reset_index(name='count')
-    queries_df = queries_df.sort_values('count', ascending=False)
-    popular_queries = queries_df.head(n_queries)['processed_query'].tolist()
+    popular_queries = queries.get_popular_queries(interactions_df, n_queries)
 
     get_logger().info('Generate qrels')
     df = interactions_df[['recipe_id', 'processed_query']]
@@ -76,8 +70,9 @@ def generate(train_size=0.8, n_queries=100, max_positives_per_query=100):
     train_qrels, train_triples = generate_triples(train_df, available_recipe_ids, n_queries, max_positives_per_query)
     with open(os.path.join(project_dir, 'data', 'processed', f'qrels_{n_queries}.train.pkl'), 'wb') as file:
         pickle.dump(train_qrels, file)
-    with open(os.path.join(project_dir, 'data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.train.pkl'),
-              'wb') as file:
+    with open(
+            os.path.join(project_dir, 'data', 'processed', f'triples_{n_queries}_{max_positives_per_query}.train.pkl'),
+            'wb') as file:
         pickle.dump(train_triples, file)
 
     get_logger().info('Generate triples for testing')
