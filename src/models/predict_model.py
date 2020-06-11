@@ -1,21 +1,37 @@
 import os
-import pandas as pd
 import pickle
+from collections import defaultdict
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 from tensorflow import keras
-from collections import defaultdict
+from tqdm import tqdm
 
-from src.metrics import metrics
+from src.data import triples_to_dataset_concat
 from src.data import triples_to_dataset_multiple
 from src.losses import pairwise_losses
+from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def load_test_dataset():
+def predict(config):
+    get_logger().info('Load model')
+    filepath = os.path.join(project_dir, 'models', config['model_filename'])
+    custom_objects = {
+        'cross_entropy_loss': pairwise_losses.cross_entropy_loss
+    }
+    model = keras.models.load_model(filepath, custom_objects=custom_objects)
+
+    get_logger().info('Load test dataset')
+    with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'rb') as file:
+        tokenizer = pickle.load(file)
+    with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'rb') as file:
+        country_encoder = pickle.load(file)
+
     interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'), nrows=1000)
     dataset = defaultdict(dict)
     for index, row in interactions_df.head(10).iterrows():
@@ -40,7 +56,10 @@ def load_test_dataset():
         if example['docs'][-1]['label'] == 0:
             example['docs'].pop()
 
-    for example in dataset.values():
+    get_logger().info('Predict')
+    map_scores = []
+    ndcg_scores = []
+    for example in tqdm(dataset.values()):
         rows = []
         for doc in example['docs']:
             row = {
@@ -49,43 +68,28 @@ def load_test_dataset():
                 'label': doc['label']
             }
             rows.append(row)
-        if len(rows) > 5:
-            test_df = pd.DataFrame(rows)
-        break
-    print(test_df)
-
-    with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'rb') as file:
-        tokenizer = pickle.load(file)
-    with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'rb') as file:
-        country_encoder = pickle.load(file)
-
-    data_processor = triples_to_dataset_multiple
-    test_dataset, _, _ = data_processor.process(test_df, tokenizer, country_encoder)
-    return test_df, test_dataset
-
-
-def predict():
-    get_logger().info('Load test dataset')
-    test_df, test_dataset = load_test_dataset()
-
-    get_logger().info('Load model')
-    filepath = os.path.join(project_dir, 'models', 'model.h5')
-    custom_objects = {
-        'cross_entropy_loss': pairwise_losses.cross_entropy_loss
-    }
-    model = keras.models.load_model(filepath, custom_objects=custom_objects)
-    preds = model.predict(test_dataset)
-    print(preds)
-    test_df['pred'] = preds
-    print(test_df[['query', 'label', 'pred']])
-    y_true = test_df['label'].tolist()
-    y_pred = test_df['pred'].tolist()
-    map_score = metrics.mean_average_precision(y_true, y_pred)
-    ndcg_score = metrics.normalized_discount_cumulative_gain(y_true, y_pred)
-    print(f'MAP: {map_score}, NDCG: {ndcg_score}')
+        test_df = pd.DataFrame(rows)
+        test_dataset, _, _ = config['data_processor'].process(test_df, tokenizer, country_encoder)
+        preds = model.predict(test_dataset)
+        test_df['pred'] = preds
+        y_true = test_df['label'].tolist()
+        y_pred = test_df['pred'].tolist()
+        map_scores.append(metrics.mean_average_precision(y_true, y_pred))
+        ndcg_scores.append(metrics.normalized_discount_cumulative_gain(y_true, y_pred))
+    print(f'MAP: {np.mean(map_scores)}, NDCG: {np.mean(ndcg_scores)}')
+    # [Baseline] MAP: 0.6971153846153846, NDCG: 0.7365986575892964
+    # [NRM-F] MAP: 0.5833333333333334, NDCG: 0.6888569943706637
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    predict()
+    config = {
+        'data_processor': triples_to_dataset_concat,
+        'model_filename': 'simple_model.h5',
+    }
+    # config = {
+    #     'data_processor': triples_to_dataset_multiple,
+    #     'model_filename': 'nrmf.h5',
+    # }
+    predict(config)
