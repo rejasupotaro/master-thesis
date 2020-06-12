@@ -1,10 +1,16 @@
-nrm-f
-==============================
+# Relevance Estimation for Multiple-Field Documents
 
 A short description of the project.
 
-Project Organization
-------------
+## Setup
+
+```
+$ docker build -t master-thesis .
+$ docker run -it master-thesis /bin/bash
+```
+
+
+## Project Organization
 
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`

@@ -9,7 +9,7 @@ packages = [
 
 [tool.poetry.dependencies]
 # poetry run pip install -e .
-python = "3.8.2"
+python = "3.8.3"
 numpy = "^1.18.4"
 pandas = "^1.0.3"
 tensorflow = "^2.2.0"
