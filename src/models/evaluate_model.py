@@ -1,6 +1,5 @@
 import os
 import pickle
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -8,8 +7,7 @@ import pandas as pd
 from tensorflow import keras
 from tqdm import tqdm
 
-from src.data import triples_to_dataset_concat
-from src.data import triples_to_dataset_multiple
+from src.data import data_processors
 from src.losses import pairwise_losses
 from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
@@ -54,22 +52,22 @@ def predict(config):
         y_pred = test_df['pred'].tolist()
         map_scores.append(metrics.mean_average_precision(y_true, y_pred))
         ndcg_scores.append(metrics.normalized_discount_cumulative_gain(y_true, y_pred))
-    print(f'MAP: {np.mean(map_scores)}, NDCG: {np.mean(ndcg_scores)}')
-    # [Baseline] MAP: 0.6971153846153846, NDCG: 0.7365986575892964
-    # [NRM-F] MAP: 0.5833333333333334, NDCG: 0.6888569943706637
+    get_logger().info(f'MAP: {np.mean(map_scores)}, NDCG: {np.mean(ndcg_scores)}')
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
+    # MAP: 0.5770670995670996, NDCG: 0.6511878388577512
     config = {
         'dataset': 'listwise.small',
-        'data_processor': triples_to_dataset_concat,
+        'data_processor': data_processors.ConcatDataProcessor(),
         'model_filename': 'simple_model.h5',
     }
+    # MAP: 0.4826129426129426, NDCG: 0.5964614233260497
     # config = {
     #     'dataset': 'listwise.small',
-    #     'data_processor': triples_to_dataset_multiple,
+    #     'data_processor': data_processors.MultiInstanceDataProcessor(),
     #     'model_filename': 'nrmf.h5',
     # }
     predict(config)

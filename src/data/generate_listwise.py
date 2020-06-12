@@ -70,20 +70,19 @@ def generate(train_size=0.8):
     with open(os.path.join(project_dir, 'data', 'processed', f'listwise.large.test.pkl'), 'wb') as file:
         pickle.dump(test_dataset, file)
 
-    top100_queries = get_popular_queries(interactions_df, 100)
-    top30_queries = set(top100_queries[:30])
-    top100_queries = set(top100_queries)
-    medium_dataset = [example for example in large_dataset if example['query'] in top100_queries]
-    get_logger().info(f'Medium listwise dataset was created with {len(medium_dataset)} groups')  # 322135 groups
+    top30_queries = get_popular_queries(interactions_df, 30)
+    top10_queries = set(top30_queries[:10])
+    top30_queries = set(top30_queries)
+    medium_dataset = [example for example in large_dataset if example['query'] in top30_queries]
+    get_logger().info(f'Medium listwise dataset was created with {len(medium_dataset)} groups')  # 154978 groups
     train_dataset, test_dataset = train_test_split(medium_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', f'listwise.medium.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
     with open(os.path.join(project_dir, 'data', 'processed', f'listwise.medium.test.pkl'), 'wb') as file:
         pickle.dump(test_dataset, file)
 
-    print(top30_queries)
-    small_dataset = [example for example in medium_dataset if example['query'] in top30_queries]
-    get_logger().info(f'Small listwise dataset was created with {len(small_dataset)} groups')  # 154978 groups
+    small_dataset = [example for example in medium_dataset if example['query'] in top10_queries]
+    get_logger().info(f'Small listwise dataset was created with {len(small_dataset)} groups')  # 77161 groups
     train_dataset, test_dataset = train_test_split(small_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', f'listwise.small.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
