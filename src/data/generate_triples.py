@@ -1,4 +1,3 @@
-import json
 import os
 import pickle
 import random
@@ -10,19 +9,11 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from src.data import queries
+from src.data.recipes import load_available_recipe_ids
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[2]
-
-
-def get_available_recipe_ids():
-    recipe_ids = []
-    with open(os.path.join(project_dir, 'data', 'raw', 'recipes.json')) as file:
-        recipes = json.load(file)
-        for recipe in recipes:
-            recipe_ids.append(recipe['recipe_id'])
-    return recipe_ids
 
 
 def generate_triples(interactions_df, available_recipe_ids, n_queries, max_positives_per_query):
@@ -60,7 +51,7 @@ def generate_triples(interactions_df, available_recipe_ids, n_queries, max_posit
 
 def generate(train_size=0.8, n_queries=100, max_positives_per_query=100):
     get_logger().info('Load available recipe IDs')
-    available_recipe_ids = get_available_recipe_ids()
+    available_recipe_ids = load_available_recipe_ids()
 
     interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'))
     interactions_df = interactions_df.sample(frac=1)

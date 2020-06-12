@@ -31,35 +31,14 @@ def predict(config):
         tokenizer = pickle.load(file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'rb') as file:
         country_encoder = pickle.load(file)
-
-    interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'), nrows=1000)
-    dataset = defaultdict(dict)
-    for index, row in interactions_df.head(10).iterrows():
-        if row['page'] != 1:
-            continue
-
-        example = dataset[row['session_id']]
-        example['query'] = row['query']
-        positive_doc_id = row['recipe_id']
-        if 'docs' not in example:
-            example['docs'] = []
-        doc_ids = [doc['doc_id'] for doc in example['docs']]
-        new_doc_ids = [int(doc_id) for doc_id in row['fetched_recipe_ids'].split(',')]
-        new_doc_ids = new_doc_ids[:row['position'] + 1]
-        for doc_id in new_doc_ids:
-            if doc_id in doc_ids:
-                continue
-            example['docs'].append({
-                'doc_id': doc_id,
-                'label': 1 if doc_id == positive_doc_id else 0
-            })
-        if example['docs'][-1]['label'] == 0:
-            example['docs'].pop()
+    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.test.pkl'), 'rb') as file:
+        dataset = pickle.load(file)
 
     get_logger().info('Predict')
     map_scores = []
     ndcg_scores = []
-    for example in tqdm(dataset.values()):
+    for example in tqdm(dataset[:10]):
+        print(example)
         rows = []
         for doc in example['docs']:
             row = {
