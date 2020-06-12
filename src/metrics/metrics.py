@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 
 
@@ -29,7 +27,7 @@ def discount_cumulative_gain(y_true, y_pred, k=10, threshold=0.5):
         if i >= k:
             break
         if label > threshold:
-            result += (math.pow(2., label) - 1.) / math.log(2. + i)
+            result += (np.power(2., label) - 1.) / np.log(2. + i)
     return result
 
 
