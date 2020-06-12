@@ -19,7 +19,7 @@ def ngram_block(n, total_words):
 def build_model(total_words, total_countries):
     query_input = keras.Input(shape=(6,), name='query_word_ids')
     title_input = keras.Input(shape=(20,), name='title_word_ids')
-    ingredients_input = keras.Input(shape=(60,50,), dtype=tf.int32, name='ingredients_word_ids')
+    ingredients_input = keras.Input(shape=(30, 20,), dtype=tf.int32, name='ingredients_word_ids')
     country_input = keras.Input(shape=(1,), name='country')
 
     # ngram = 2

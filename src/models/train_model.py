@@ -16,9 +16,9 @@ project_dir = Path(__file__).resolve().parents[2]
 
 
 def train(config):
-    get_logger().info('Convert triples into dataset')
+    get_logger().info('Transform examples into dataset')
     data_processor = config['data_processor']
-    train_dataset, tokenizer, country_encoder = data_processor.process_triples('triples_100_100.train.pkl')
+    train_dataset, tokenizer, country_encoder = data_processor.process_listwise(f'{config["dataset"]}.train.pkl')
     with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'wb') as file:
         pickle.dump(tokenizer, file)
     with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'wb') as file:
@@ -26,7 +26,7 @@ def train(config):
     total_words = len(tokenizer.word_index) + 1
     total_countries = len(country_encoder.classes_)
 
-    test_dataset, _, _ = data_processor.process_triples('triples_100_100.test.pkl', tokenizer, country_encoder)
+    test_dataset, _, _ = data_processor.process_listwise(f'{config["dataset"]}.test.pkl', tokenizer, country_encoder)
 
     get_logger().info('Build model')
     model = config['build_model_fn'](total_words, total_countries)
@@ -57,13 +57,16 @@ def train(config):
 if __name__ == '__main__':
     create_logger()
     set_seed()
+    #  loss: 0.6096 - accuracy: 0.6342 - val_loss: 0.6220 - val_accuracy: 0.6195
     # config = {
+    #     'dataset': 'listwise.small',
     #     'data_processor': triples_to_dataset_concat,
     #     'build_model_fn': simple_model.build_model,
     #     'model_filename': 'simple_model.h5',
     #     'epochs': 3,
     # }
     config = {
+        'dataset': 'listwise.small',
         'data_processor': triples_to_dataset_multiple,
         'build_model_fn': nrmf.build_model,
         'model_filename': 'nrmf.h5',
