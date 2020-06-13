@@ -4,11 +4,19 @@ A short description of the project.
 
 ## Setup
 
+### Local
+
 ```
-$ docker build -t master-thesis .
-$ docker run -it master-thesis /bin/bash
+$ poetry run python src/data/generate_listwise.py
+$ poetry run python src/models/train_model.py
 ```
 
+### Remote
+
+```
+$ sudo docker built -t master-thesis .
+$ sudo docker run --mount src="$(pwd)/data",dst=/workspace/data,type=bind -it master-thesis /bin/bash
+```
 
 ## Project Organization
 
