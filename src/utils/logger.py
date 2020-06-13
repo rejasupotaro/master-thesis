@@ -5,7 +5,6 @@ from logging import getLogger, Formatter, FileHandler, StreamHandler, INFO, DEBU
 project_dir = Path(__file__).resolve().parents[2]
 logs_dir = os.path.join(project_dir, 'logs')
 
-
 def create_logger(version=1):
     log_file = os.path.join(logs_dir, f'{version}.log')
 

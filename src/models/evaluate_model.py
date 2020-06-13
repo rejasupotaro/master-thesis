@@ -16,7 +16,7 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def predict(config):
+def evaluate(config):
     get_logger().info('Load model')
     filepath = os.path.join(project_dir, 'models', config['model_filename'])
     custom_objects = {
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     #     'data_processor': data_processors.MultiInstanceDataProcessor(),
     #     'model_filename': 'nrmf.h5',
     # }
-    predict(config)
+    evaluate(config)
