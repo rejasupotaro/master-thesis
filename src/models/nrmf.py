@@ -22,21 +22,12 @@ def build_model(total_words, total_countries):
     ingredients_input = keras.Input(shape=(30, 20,), dtype=tf.int32, name='ingredients_word_ids')
     country_input = keras.Input(shape=(1,), name='country')
 
-    # ngram = 2
-    # query_features = ngram_block(ngram, total_words)(query_input)
-    # title_features = ngram_block(ngram, total_words)(title_input)
-    # ingredients_features = ngram_block(ngram, total_words)(ingredients_input)
-    # embedding = layers.Embedding(pow(total_words, ngram), 64)
-
-    embedding = layers.Embedding(total_words, 64)
+    embedding = layers.Embedding(total_words, 64, mask_zero=True)
     query_features = embedding(query_input)
     title_features = embedding(title_input)
     ingredients_features = embedding(ingredients_input)
     country_features = layers.Embedding(total_countries, 64)(country_input)
 
-    #     query_features = layers.GlobalAveragePooling1D()(query_features)
-    #     title_features = layers.GlobalAveragePooling1D()(title_features)
-    #     ingredients_features = layers.GlobalAveragePooling1D()(ingredients_features)
     query_features = tf.reduce_mean(layers.Conv1D(64, 3, activation='relu')(query_features), axis=1)
     title_features = tf.reduce_mean(layers.Conv1D(64, 3, activation='relu')(title_features), axis=1)
     ingredients_features = layers.Conv2D(64, 3, activation='relu')(ingredients_features)

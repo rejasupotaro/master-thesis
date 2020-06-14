@@ -4,31 +4,13 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 
-def ngram_block(n, total_words):
-    def wrapped(inputs):
-        layer = layers.Conv1D(1, n, use_bias=False, trainable=False)
-        x = layers.Reshape((-1, 1))(inputs)
-        x = layer(x)
-        kernel = np.power(total_words, range(0, n))
-        layer.set_weights([kernel.reshape(n, 1, 1)])
-        return layers.Reshape((-1,))(x)
-
-    return wrapped
-
-
 def build_model(total_words, total_countries):
     query_input = keras.Input(shape=(6,), name='query_word_ids')
     title_input = keras.Input(shape=(20,), name='title_word_ids')
     ingredients_input = keras.Input(shape=(300,), name='ingredients_word_ids')
     country_input = keras.Input(shape=(1,), name='country')
 
-    # ngram = 2
-    # query_features = ngram_block(ngram, total_words)(query_input)
-    # title_features = ngram_block(ngram, total_words)(title_input)
-    # ingredients_features = ngram_block(ngram, total_words)(ingredients_input)
-    # embedding = layers.Embedding(pow(total_words, ngram), 64)
-
-    embedding = layers.Embedding(total_words, 64)
+    embedding = layers.Embedding(total_words, 64, mask_zero=True)
     query_features = embedding(query_input)
     title_features = embedding(title_input)
     ingredients_features = embedding(ingredients_input)
