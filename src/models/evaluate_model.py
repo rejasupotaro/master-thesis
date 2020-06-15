@@ -62,7 +62,7 @@ if __name__ == '__main__':
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
-        'model_filename': 'simple_model.h5',
+        'model_filename': 'naive.h5',
     }
     # MAP: 0.4826129426129426, NDCG: 0.5964614233260497
     # config = {

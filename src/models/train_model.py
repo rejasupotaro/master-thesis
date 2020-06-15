@@ -6,7 +6,7 @@ from pathlib import Path
 import tensorflow as tf
 from tensorflow import keras
 
-from src.models import simple_model, nrmf
+from src.models import naive, nrmf
 from src.data import data_processors
 from src.losses import pairwise_losses
 from src.utils.logger import create_logger, get_logger
@@ -61,8 +61,8 @@ if __name__ == '__main__':
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
-        'build_model_fn': simple_model.build_model,
-        'model_filename': 'simple_model.h5',
+        'build_model_fn': naive.build_model,
+        'model_filename': 'naive.h5',
         'epochs': 3,
     }
     # loss: 0.6151 - accuracy: 0.6304 - val_loss: 0.6261 - val_accuracy: 0.6153
