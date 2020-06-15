@@ -10,7 +10,7 @@ def build_model(total_words, total_countries):
     ingredients_input = keras.Input(shape=(300,), name='ingredients_word_ids')
     country_input = keras.Input(shape=(1,), name='country')
 
-    embedding = layers.Embedding(total_words, 64, mask_zero=True)
+    embedding = layers.Embedding(total_words, 64)
     query_features = embedding(query_input)
     title_features = embedding(title_input)
     ingredients_features = embedding(ingredients_input)
@@ -28,5 +28,5 @@ def build_model(total_words, total_countries):
     return keras.Model(
         inputs=[query_input, title_input, ingredients_input, country_input],
         outputs=[output],
-        name='NRM-F'
+        name='Naive'
     )
