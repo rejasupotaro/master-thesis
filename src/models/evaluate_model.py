@@ -25,7 +25,7 @@ def evaluate(config):
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
     get_logger().info('Load test dataset')
-    with open(os.path.join(project_dir, 'models', 'concat_data_processor.pkl'), 'rb') as file:
+    with open(os.path.join(project_dir, 'models', f'{config["data_processor_filename"]}.pkl'), 'rb') as file:
         data_processor = pickle.load(file)
     with open(os.path.join(project_dir, 'data', 'processed', f'{config["dataset"]}.test.pkl'), 'rb') as file:
         test_dataset = pickle.load(file)
@@ -64,7 +64,7 @@ def evaluate_naive():
 
 
 def evaluate_nrmf():
-    # MAP: 0.4826129426129426, NDCG: 0.5964614233260497
+    # MAP: 0.4537222853076016, NDCG: 0.5605977972647006
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'multi_instance_data_processor',
