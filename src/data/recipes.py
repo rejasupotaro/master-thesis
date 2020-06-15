@@ -26,7 +26,7 @@ def load_recipes():
     return recipes
 
 
-def load_available_recipe_ids():
+def load_available_recipe_ids() -> set:
     recipe_ids = set()
     with open(os.path.join(project_dir, 'data', 'raw', 'recipes.json')) as file:
         recipes = json.load(file)

@@ -6,9 +6,9 @@ from pathlib import Path
 import tensorflow as tf
 from tensorflow import keras
 
-from src.models import naive, nrmf
 from src.data import data_processors
 from src.losses import pairwise_losses
+from src.models import naive, nrmf
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
@@ -18,18 +18,19 @@ project_dir = Path(__file__).resolve().parents[2]
 def train(config):
     get_logger().info('Transform examples into dataset')
     data_processor = config['data_processor']
-    train_dataset, tokenizer, country_encoder = data_processor.listwise_to_dataset(f'{config["dataset"]}.train.pkl')
-    with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'wb') as file:
-        pickle.dump(tokenizer, file)
-    with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'wb') as file:
-        pickle.dump(country_encoder, file)
-    total_words = len(tokenizer.word_index) + 1
-    total_countries = len(country_encoder.classes_)
+    train_df = data_processor.listwise_to_df(f'{config["dataset"]}.train.pkl')
+    train_dataset = data_processor.fit_transform(train_df)
+    with open(os.path.join(project_dir, 'models', f'{config["data_processor_filename"]}.pkl'), 'wb') as file:
+        pickle.dump(data_processor, file)
 
-    test_dataset, _, _ = data_processor.listwise_to_dataset(f'{config["dataset"]}.test.pkl', tokenizer, country_encoder)
+    test_df = data_processor.listwise_to_df(f'{config["dataset"]}.test.pkl')
+    test_dataset = data_processor.transform(test_df)
 
     get_logger().info('Build model')
-    model = config['build_model_fn'](total_words, total_countries)
+    model = config['build_model_fn'](
+        data_processor.total_words,
+        data_processor.total_countries
+    )
     model.summary()
 
     model.compile(
@@ -55,23 +56,34 @@ def train(config):
     get_logger().info('Done')
 
 
-if __name__ == '__main__':
-    create_logger()
-    set_seed()
+def train_naive():
     # loss: 0.6142 - accuracy: 0.6297 - val_loss: 0.6266 - val_accuracy: 0.6161
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
+        'data_processor_filename': 'concat_data_processor',
         'build_model_fn': naive.build_model,
         'model_filename': 'naive.h5',
         'epochs': 3,
     }
-    # loss: 0.6151 - accuracy: 0.6304 - val_loss: 0.6261 - val_accuracy: 0.6153
-    # config = {
-    #     'dataset': 'listwise.small',
-    #     'data_processor': data_processors.MultiInstanceDataProcessor(),
-    #     'build_model_fn': nrmf.build_model,
-    #     'model_filename': 'nrmf.h5',
-    #     'epochs': 3,
-    # }
     train(config)
+
+
+def train_nrmf():
+    # loss: 0.6151 - accuracy: 0.6304 - val_loss: 0.6261 - val_accuracy: 0.6153
+    config = {
+        'dataset': 'listwise.small',
+        'data_processor': data_processors.MultiInstanceDataProcessor(),
+        'data_processor_filename': 'multi_instance_data_processor',
+        'build_model_fn': nrmf.build_model,
+        'model_filename': 'nrmf.h5',
+        'epochs': 3,
+    }
+    train(config)
+
+
+if __name__ == '__main__':
+    create_logger()
+    set_seed()
+    # train_naive()
+    train_nrmf()

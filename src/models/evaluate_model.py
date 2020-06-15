@@ -25,10 +25,8 @@ def evaluate(config):
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
     get_logger().info('Load test dataset')
-    with open(os.path.join(project_dir, 'models', 'tokenizer.pkl'), 'rb') as file:
-        tokenizer = pickle.load(file)
-    with open(os.path.join(project_dir, 'models', 'country_encoder.pkl'), 'rb') as file:
-        country_encoder = pickle.load(file)
+    with open(os.path.join(project_dir, 'models', 'concat_data_processor.pkl'), 'rb') as file:
+        data_processor = pickle.load(file)
     with open(os.path.join(project_dir, 'data', 'processed', f'{config["dataset"]}.test.pkl'), 'rb') as file:
         dataset = pickle.load(file)
 
@@ -45,7 +43,7 @@ def evaluate(config):
             }
             rows.append(row)
         test_df = pd.DataFrame(rows)
-        test_dataset, _, _ = config['data_processor'].process(test_df, tokenizer, country_encoder)
+        test_dataset = data_processor.transform(test_df)
         preds = model.predict(test_dataset)
         test_df['pred'] = preds
         y_true = test_df['label'].tolist()
@@ -55,19 +53,28 @@ def evaluate(config):
     get_logger().info(f'MAP: {np.mean(map_scores)}, NDCG: {np.mean(ndcg_scores)}')
 
 
-if __name__ == '__main__':
-    create_logger()
-    set_seed()
+def evaluate_naive():
     # MAP: 0.5770670995670996, NDCG: 0.6511878388577512
     config = {
         'dataset': 'listwise.small',
-        'data_processor': data_processors.ConcatDataProcessor(),
+        'data_processor_filename': 'concat_data_processor',
         'model_filename': 'naive.h5',
     }
-    # MAP: 0.4826129426129426, NDCG: 0.5964614233260497
-    # config = {
-    #     'dataset': 'listwise.small',
-    #     'data_processor': data_processors.MultiInstanceDataProcessor(),
-    #     'model_filename': 'nrmf.h5',
-    # }
     evaluate(config)
+
+
+def evaluate_nrmf():
+    # MAP: 0.4826129426129426, NDCG: 0.5964614233260497
+    config = {
+        'dataset': 'listwise.small',
+        'data_processor_filename': 'multi_instance_data_processor',
+        'model_filename': 'nrmf.h5',
+    }
+    evaluate(config)
+
+
+if __name__ == '__main__':
+    create_logger()
+    set_seed()
+    evaluate_naive()
+    # evaluate_nrmf()

@@ -17,8 +17,19 @@ from src.data.recipes import load_recipes
 class DataProcessor(abc.ABC):
     def __init__(self):
         self.recipes = load_recipes()
+        self.tokenizer = None
+        self.country_encoder = None
+        self.batch_size = 32
 
-    def listwise_to_dataset(self, listwise_filename, tokenizer=None, country_encoder=None):
+    @property
+    def total_words(self):
+        return len(self.tokenizer.word_index) + 1
+
+    @property
+    def total_countries(self):
+        return len(self.country_encoder.classes_)
+
+    def listwise_to_df(self, listwise_filename: str) -> pd.DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
         with open(os.path.join(project_dir, 'data', 'processed', listwise_filename), 'rb') as file:
             dataset = pickle.load(file)
@@ -45,44 +56,56 @@ class DataProcessor(abc.ABC):
                     rows.append(negatives[j])
                     i -= 1
                     j -= 1
-        df = pd.DataFrame(rows)
-        return self.process(df, tokenizer, country_encoder)
+        return pd.DataFrame(rows)
 
     @abc.abstractmethod
-    def process(self, df, tokenizer, country_encoder):
+    def fit(self, df: pd.DataFrame):
         raise NotImplementedError('Calling an abstract method.')
+
+    @abc.abstractmethod
+    def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+        raise NotImplementedError('Calling an abstract method.')
+
+    def fit_transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+        self.fit(df)
+        return self.transform(df)
 
 
 class ConcatDataProcessor(DataProcessor):
-    def process(self, df, tokenizer, country_encoder):
-        recipes = load_recipes()
-
+    def fit(self, df: pd.DataFrame):
         df['query'] = df['query'].astype(str)
-        df['title'] = df['doc_id'].apply(lambda doc_id: recipes[doc_id]['title']).astype(str)
-        df['ingredients'] = df['doc_id'].apply(lambda doc_id: recipes[doc_id]['ingredients'])
+        df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
+        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
         df['ingredients'] = df['ingredients'].apply(lambda x: ' '.join(x))
-        df['country'] = df['doc_id'].apply(lambda doc_id: recipes[doc_id]['country'])
+        df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
 
-        if not tokenizer:
-            oov_token = '<OOV>'
-            sentences = []
-            for key in ['query', 'title', 'ingredients']:
-                sentences += df[key].tolist()
-            tokenizer = Tokenizer(
-                oov_token=oov_token,
-                char_level=False
-            )
-            tokenizer.fit_on_texts(sentences)
+        oov_token = '<oov>'
+        sentences = []
+        sentences += df['query'].tolist()
+        sentences += df['title'].tolist()
+        sentences += df['ingredients'].tolist()
+        self.tokenizer = Tokenizer(
+            oov_token=oov_token,
+            char_level=False
+        )
+        self.tokenizer.fit_on_texts(sentences)
 
-        for feature in ['query', 'title', 'ingredients']:
-            df[f'{feature}_word_ids'] = tokenizer.texts_to_sequences(df[feature].tolist())
+        self.country_encoder = LabelEncoder()
+        self.country_encoder.fit(df['country'].tolist() + [''])
 
-        if not country_encoder:
-            country_encoder = LabelEncoder()
-            country_encoder.fit(df['country'].tolist() + [''])
-        else:
-            df['country'] = df['country'].apply(lambda c: c if c in country_encoder.classes_ else '')
-        df['country'] = country_encoder.transform(df['country'])
+    def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+        df['query'] = df['query'].astype(str)
+        df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
+        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
+        df['ingredients'] = df['ingredients'].apply(lambda x: ' '.join(x))
+        df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
+
+        df['query_word_ids'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
+        df['title_word_ids'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
+        df['ingredients_word_ids'] = self.tokenizer.texts_to_sequences(df['ingredients'].tolist())
+
+        df['country'] = df['country'].apply(lambda c: c if c in self.country_encoder.classes_ else '')
+        df['country'] = self.country_encoder.transform(df['country'])
 
         query_word_ids = df['query_word_ids'].tolist()
         query_word_ids = pad_sequences(query_word_ids,
@@ -103,7 +126,7 @@ class ConcatDataProcessor(DataProcessor):
         country = df['country'].tolist()
         label = df['label'].tolist()
 
-        dataset = tf.data.Dataset.from_tensor_slices((
+        return tf.data.Dataset.from_tensor_slices((
             {
                 'query_word_ids': query_word_ids,
                 'title_word_ids': title_word_ids,
@@ -111,42 +134,43 @@ class ConcatDataProcessor(DataProcessor):
                 'country': country
             },
             {'label': label}
-        )).batch(32)
-
-        return dataset, tokenizer, country_encoder
+        )).batch(self.batch_size)
 
 
 class MultiInstanceDataProcessor(DataProcessor):
-    def process(self, df, tokenizer, country_encoder):
-        recipes = load_recipes()
-
+    def fit(self, df: pd.DataFrame):
         df['query'] = df['query'].astype(str)
-        df['title'] = df['doc_id'].apply(lambda doc_id: recipes[doc_id]['title']).astype(str)
-        df['ingredients'] = df['doc_id'].apply(lambda doc_id: recipes[doc_id]['ingredients'])
-        df['country'] = df['doc_id'].apply(lambda doc_id: recipes[doc_id]['country'])
+        df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
+        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
+        df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
 
-        if not tokenizer:
-            oov_token = '<OOV>'
-            sentences = []
-            sentences += df['query'].tolist()
-            sentences += df['title'].tolist()
-            sentences += [ingredient for ingredients in df['ingredients'].tolist() for ingredient in ingredients]
-            tokenizer = Tokenizer(
-                oov_token=oov_token,
-                char_level=False
-            )
-            tokenizer.fit_on_texts(sentences)
+        oov_token = '<OOV>'
+        sentences = []
+        sentences += df['query'].tolist()
+        sentences += df['title'].tolist()
+        sentences += [ingredient for ingredients in df['ingredients'].tolist() for ingredient in ingredients]
+        self.tokenizer = Tokenizer(
+            oov_token=oov_token,
+            char_level=False
+        )
+        self.tokenizer.fit_on_texts(sentences)
 
-        df['query_word_ids'] = tokenizer.texts_to_sequences(df['query'].tolist())
-        df['title_word_ids'] = tokenizer.texts_to_sequences(df['title'].tolist())
-        df['ingredients_word_ids'] = [tokenizer.texts_to_sequences(ingredients) for ingredients in df['ingredients']]
+        self.country_encoder = LabelEncoder()
+        self.country_encoder.fit(df['country'].tolist() + [''])
 
-        if not country_encoder:
-            country_encoder = LabelEncoder()
-            country_encoder.fit(df['country'].tolist() + [''])
-        else:
-            df['country'] = df['country'].apply(lambda c: c if c in country_encoder.classes_ else '')
-        df['country'] = country_encoder.transform(df['country'])
+    def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+        df['query'] = df['query'].astype(str)
+        df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
+        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
+        df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
+
+        df['query_word_ids'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
+        df['title_word_ids'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
+        df['ingredients_word_ids'] = [self.tokenizer.texts_to_sequences(ingredients) for ingredients in
+                                      df['ingredients']]
+
+        df['country'] = df['country'].apply(lambda c: c if c in self.country_encoder.classes_ else '')
+        df['country'] = self.country_encoder.transform(df['country'])
 
         query_word_ids = df['query_word_ids'].tolist()
         query_word_ids = pad_sequences(query_word_ids,
@@ -166,7 +190,7 @@ class MultiInstanceDataProcessor(DataProcessor):
         country = df['country'].tolist()
         label = df['label'].tolist()
 
-        dataset = tf.data.Dataset.from_tensor_slices((
+        return tf.data.Dataset.from_tensor_slices((
             {
                 'query_word_ids': query_word_ids,
                 'title_word_ids': title_word_ids,
@@ -174,6 +198,4 @@ class MultiInstanceDataProcessor(DataProcessor):
                 'country': country
             },
             {'label': label}
-        )).batch(32)
-
-        return dataset, tokenizer, country_encoder
+        )).batch(self.batch_size)
