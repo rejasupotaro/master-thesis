@@ -48,8 +48,9 @@ def train(config):
         callbacks=[tensorboard_callback]
     )
 
-    get_logger().info('Save model')
-    model.save(os.path.join(project_dir, 'models', config['model_filename']))
+    if config['model_filename']:
+        get_logger().info('Save model')
+        model.save(os.path.join(project_dir, 'models', config['model_filename']))
 
     get_logger().info('Done')
 
