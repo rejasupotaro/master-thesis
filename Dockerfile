@@ -15,6 +15,5 @@ RUN poetry install
 
 RUN mkdir models
 RUN mkdir logs
-RUN mkdir logs/fit
 
 COPY .env .
