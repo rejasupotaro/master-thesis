@@ -15,11 +15,11 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self):
+    def __init__(self, batch_size=128):
         self.recipes = load_recipes()
         self.tokenizer = None
         self.country_encoder = None
-        self.batch_size = 32
+        self.batch_size = batch_size
 
     @property
     def total_words(self):

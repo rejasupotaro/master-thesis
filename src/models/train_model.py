@@ -85,5 +85,5 @@ def train_nrmf():
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    # train_naive()
-    train_nrmf()
+    train_naive()
+    # train_nrmf()

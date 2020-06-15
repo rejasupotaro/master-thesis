@@ -28,12 +28,12 @@ def evaluate(config):
     with open(os.path.join(project_dir, 'models', 'concat_data_processor.pkl'), 'rb') as file:
         data_processor = pickle.load(file)
     with open(os.path.join(project_dir, 'data', 'processed', f'{config["dataset"]}.test.pkl'), 'rb') as file:
-        dataset = pickle.load(file)
+        test_dataset = pickle.load(file)
 
     get_logger().info('Predict')
     map_scores = []
     ndcg_scores = []
-    for example in tqdm(dataset[:10]):
+    for example in tqdm(test_dataset):
         rows = []
         for doc in example['docs']:
             row = {
@@ -54,7 +54,7 @@ def evaluate(config):
 
 
 def evaluate_naive():
-    # MAP: 0.5770670995670996, NDCG: 0.6511878388577512
+    # MAP: 0.47114230436107557, NDCG: 0.5731880413536566
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'concat_data_processor',
