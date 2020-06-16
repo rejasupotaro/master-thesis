@@ -70,7 +70,7 @@ def train_naive():
 
 
 def train_nrmf():
-    # loss: 0.6151 - accuracy: 0.6304 - val_loss: 0.6261 - val_accuracy: 0.6153
+    # loss: 0.6135 - accuracy: 0.6300 - val_loss: 0.6226 - val_accuracy: 0.6170
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
@@ -85,5 +85,5 @@ def train_nrmf():
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train_naive()
-    # train_nrmf()
+    # train_naive()
+    train_nrmf()

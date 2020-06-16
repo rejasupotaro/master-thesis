@@ -12,6 +12,7 @@ if __name__ == '__main__':
     config = {
         'dataset': 'listwise.medium',
         'data_processor': data_processors.ConcatDataProcessor(),
+        'data_processor_filename': 'concat_data_processor',
         'build_model_fn': naive.build_model,
         'model_filename': 'naive.h5',
         'epochs': 10,
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     get_logger().info('Evaluate naive model')
     config = {
         'dataset': 'listwise.medium',
-        'data_processor': data_processors.ConcatDataProcessor(),
+        'data_processor_filename': 'concat_data_processor',
         'model_filename': 'naive.h5',
     }
     evaluate_model.evaluate(config)
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     config = {
         'dataset': 'listwise.medium',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
+        'data_processor_filename': 'multi_instance_data_processor',
         'build_model_fn': nrmf.build_model,
         'model_filename': 'nrmf.h5',
         'epochs': 10,
@@ -38,8 +40,8 @@ if __name__ == '__main__':
 
     get_logger().info('Evaluate NRM-F')
     config = {
-        'dataset': 'listwise.small',
-        'data_processor': data_processors.MultiInstanceDataProcessor(),
+        'dataset': 'listwise.medium',
+        'data_processor_filename': 'multi_instance_data_processor',
         'model_filename': 'nrmf.h5',
     }
     evaluate_model.evaluate(config)

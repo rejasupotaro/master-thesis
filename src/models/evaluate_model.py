@@ -7,7 +7,6 @@ import pandas as pd
 from tensorflow import keras
 from tqdm import tqdm
 
-from src.data import data_processors
 from src.losses import pairwise_losses
 from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
@@ -64,7 +63,7 @@ def evaluate_naive():
 
 
 def evaluate_nrmf():
-    # MAP: 0.4537222853076016, NDCG: 0.5605977972647006
+    # MAP: 0.4539098462504743, NDCG: 0.5602200317284624
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'multi_instance_data_processor',
@@ -76,5 +75,5 @@ def evaluate_nrmf():
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    evaluate_naive()
-    # evaluate_nrmf()
+    # evaluate_naive()
+    evaluate_nrmf()
