@@ -1,6 +1,7 @@
 from src.data import data_processors
 from src.models import naive, nrmf
-from src.models import train_model, evaluate_model
+import evaluate_model
+import train_model
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 

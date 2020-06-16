@@ -12,7 +12,7 @@ from src.models import naive, nrmf
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
-project_dir = Path(__file__).resolve().parents[2]
+project_dir = Path(__file__).resolve().parents[1]
 
 
 def train(config):
@@ -27,10 +27,10 @@ def train(config):
     test_dataset = data_processor.transform(test_df)
 
     get_logger().info('Build model')
-    model = config['build_model_fn'](
+    model = config['model'](
         data_processor.total_words,
         data_processor.total_countries
-    )
+    ).build()
     model.summary()
 
     model.compile(
@@ -62,7 +62,7 @@ def train_naive():
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
         'data_processor_filename': 'concat_data_processor',
-        'build_model_fn': naive.build_model,
+        'model': naive.Naive,
         'model_filename': 'naive.h5',
         'epochs': 3,
     }
@@ -75,7 +75,7 @@ def train_nrmf():
         'dataset': 'listwise.small',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
         'data_processor_filename': 'multi_instance_data_processor',
-        'build_model_fn': nrmf.build_model,
+        'model': nrmf.NRMF,
         'model_filename': 'nrmf.h5',
         'epochs': 3,
     }

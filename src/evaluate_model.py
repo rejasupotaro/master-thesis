@@ -12,7 +12,7 @@ from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
-project_dir = Path(__file__).resolve().parents[2]
+project_dir = Path(__file__).resolve().parents[1]
 
 
 def evaluate(config):

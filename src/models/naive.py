@@ -1,32 +1,38 @@
-import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from src.models.base_model import BaseModel
 
-def build_model(total_words, total_countries):
-    query_input = keras.Input(shape=(6,), name='query_word_ids')
-    title_input = keras.Input(shape=(20,), name='title_word_ids')
-    ingredients_input = keras.Input(shape=(300,), name='ingredients_word_ids')
-    country_input = keras.Input(shape=(1,), name='country')
 
-    embedding = layers.Embedding(total_words, 64)
-    query_features = embedding(query_input)
-    title_features = embedding(title_input)
-    ingredients_features = embedding(ingredients_input)
-    country_features = layers.Embedding(total_countries, 64)(country_input)
+class Naive(BaseModel):
+    @property
+    def name(self) -> str:
+        return 'Naive'
 
-    query_features = layers.GlobalMaxPooling1D()(query_features)
-    title_features = layers.GlobalMaxPooling1D()(title_features)
-    ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
-    country_features = tf.reshape(country_features, shape=(-1, 64,))
+    def build(self):
+        query_input = keras.Input(shape=(6,), name='query_word_ids')
+        title_input = keras.Input(shape=(20,), name='title_word_ids')
+        ingredients_input = keras.Input(shape=(300,), name='ingredients_word_ids')
+        country_input = keras.Input(shape=(1,), name='country')
 
-    x = layers.concatenate([query_features, title_features, ingredients_features, country_features])
-    x = layers.Dense(32, activation='relu')(x)
-    output = layers.Dense(1, activation='sigmoid', name='label')(x)
+        embedding = layers.Embedding(self.total_words, 64)
+        query_features = embedding(query_input)
+        title_features = embedding(title_input)
+        ingredients_features = embedding(ingredients_input)
+        country_features = layers.Embedding(self.total_countries, 64)(country_input)
 
-    return keras.Model(
-        inputs=[query_input, title_input, ingredients_input, country_input],
-        outputs=[output],
-        name='Naive'
-    )
+        query_features = layers.GlobalMaxPooling1D()(query_features)
+        title_features = layers.GlobalMaxPooling1D()(title_features)
+        ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
+        country_features = tf.reshape(country_features, shape=(-1, 64,))
+
+        x = layers.concatenate([query_features, title_features, ingredients_features, country_features])
+        x = layers.Dense(32, activation='relu')(x)
+        output = layers.Dense(1, activation='sigmoid', name='label')(x)
+
+        return keras.Model(
+            inputs=[query_input, title_input, ingredients_input, country_input],
+            outputs=[output],
+            name=self.name
+        )
