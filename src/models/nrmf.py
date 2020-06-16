@@ -36,13 +36,14 @@ def build_model(total_words, total_countries):
     country_features = layers.Embedding(total_countries, embedding_dim)(country_input)
 
     query_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(query_features)
-    query_features = layers.GlobalAveragePooling1D()(query_features)
-    title_features = tf.reduce_mean(layers.Conv1D(embedding_dim, n_gram, activation='relu')(title_features), axis=1)
+    query_features = layers.GlobalMaxPooling1D()(query_features)
+    title_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(title_features)
+    title_features = layers.GlobalMaxPooling1D()(title_features)
     ingredients_features = tf.reshape(ingredients_features, [-1, ingredient_len, 64])
     ingredients_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(ingredients_features)
-    ingredients_features = layers.GlobalAveragePooling1D()(ingredients_features)
+    ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
     ingredients_features = tf.reshape(ingredients_features, [-1, n_ingredients, 64])
-    ingredients_features = layers.GlobalAveragePooling1D()(ingredients_features)
+    ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
     country_features = tf.reshape(country_features, shape=(-1, embedding_dim,))
 
     query_title_features = tf.multiply(query_features, title_features)

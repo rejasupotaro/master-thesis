@@ -57,7 +57,7 @@ def train(config):
 
 
 def train_naive():
-    # loss: 0.6142 - accuracy: 0.6297 - val_loss: 0.6266 - val_accuracy: 0.6161
+    # loss: 0.6081 - accuracy: 0.6390 - val_loss: 0.6254 - val_accuracy: 0.6145
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
@@ -70,7 +70,7 @@ def train_naive():
 
 
 def train_nrmf():
-    # loss: 0.6135 - accuracy: 0.6300 - val_loss: 0.6226 - val_accuracy: 0.6170
+    # loss: 0.6076 - accuracy: 0.6374 - val_loss: 0.6244 - val_accuracy: 0.6172
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
@@ -85,5 +85,5 @@ def train_nrmf():
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    # train_naive()
-    train_nrmf()
+    train_naive()
+    # train_nrmf()

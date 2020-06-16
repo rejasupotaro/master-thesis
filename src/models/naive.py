@@ -16,9 +16,9 @@ def build_model(total_words, total_countries):
     ingredients_features = embedding(ingredients_input)
     country_features = layers.Embedding(total_countries, 64)(country_input)
 
-    query_features = layers.GlobalAveragePooling1D()(query_features)
-    title_features = layers.GlobalAveragePooling1D()(title_features)
-    ingredients_features = layers.GlobalAveragePooling1D()(ingredients_features)
+    query_features = layers.GlobalMaxPooling1D()(query_features)
+    title_features = layers.GlobalMaxPooling1D()(title_features)
+    ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
     country_features = tf.reshape(country_features, shape=(-1, 64,))
 
     x = layers.concatenate([query_features, title_features, ingredients_features, country_features])
