@@ -53,7 +53,7 @@ def evaluate(config):
 
 
 def evaluate_naive():
-    # MAP: 0.45707103204748883, NDCG: 0.5631012458613334
+    # MAP: 0.6186377460644218, NDCG: 0.7089058407731836
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'concat_data_processor',
@@ -63,7 +63,7 @@ def evaluate_naive():
 
 
 def evaluate_nrmf():
-    # MAP: 0.4616903083060701, NDCG: 0.5648055579634502
+    # MAP: 0.4810449111917852, NDCG: 0.5963417479797426
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'multi_instance_data_processor',

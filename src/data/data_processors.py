@@ -29,7 +29,7 @@ class DataProcessor(abc.ABC):
     def total_countries(self):
         return len(self.country_encoder.classes_)
 
-    def listwise_to_df(self, listwise_filename: str) -> pd.DataFrame:
+    def listwise_to_df(self, listwise_filename: str, max_negatives: int = 10) -> pd.DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
         with open(os.path.join(project_dir, 'data', 'processed', listwise_filename), 'rb') as file:
             dataset = pickle.load(file)
@@ -49,13 +49,11 @@ class DataProcessor(abc.ABC):
                     positives.append(data)
                 else:
                     negatives.append(data)
-                i, j = len(positives) - 1, len(negatives) - 1
 
-                while i >= 0 and j >= 0:
-                    rows.append(positives[i])
-                    rows.append(negatives[j])
-                    i -= 1
-                    j -= 1
+            for positive in positives:
+                for negative in negatives[:max_negatives]:
+                    rows.append(positive)
+                    rows.append(negative)
         return pd.DataFrame(rows)
 
     @abc.abstractmethod
