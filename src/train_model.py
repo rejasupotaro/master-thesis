@@ -87,4 +87,13 @@ if __name__ == '__main__':
     set_seed()
     train_naive()
     # train_nrmf()
-#
+
+    config = {
+        'dataset': 'listwise.small',
+        'data_processor': data_processors.ConcatDataProcessor(),
+        'data_processor_filename': 'concat_data_processor',
+        'model': nrmf.NRMF,
+        'model_filename': 'nrmf.h5',
+        'epochs': 3,
+    }
+    train(config)

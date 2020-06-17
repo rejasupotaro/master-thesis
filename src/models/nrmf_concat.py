@@ -5,10 +5,10 @@ from tensorflow.keras import layers
 from src.models.base_model import BaseModel
 
 
-class Naive(BaseModel):
+class NRMFConcat(BaseModel):
     @property
-    def name(self) -> str:
-        return 'Naive'
+    def name(self):
+        return 'NRM-F-Concat'
 
     def build(self):
         query_len = 6
@@ -36,13 +36,13 @@ class Naive(BaseModel):
         description_features = layers.GlobalMaxPooling1D()(description_features)
         country_features = tf.reshape(country_features, shape=(-1, embedding_dim,))
 
-        x = layers.concatenate([
-            query_features,
-            title_features,
-            ingredients_features,
-            description_features,
-            country_features
-        ])
+        query_title_features = tf.multiply(query_features, title_features)
+        query_ingredients_features = tf.multiply(query_features, ingredients_features)
+        query_description_features = tf.multiply(query_features, description_features)
+        query_country_features = tf.multiply(query_features, country_features)
+
+        x = layers.concatenate(
+            [query_title_features, query_ingredients_features, query_description_features, query_country_features])
         x = layers.Dense(32, activation='relu')(x)
         output = layers.Dense(1, activation='sigmoid', name='label')(x)
 
@@ -51,4 +51,3 @@ class Naive(BaseModel):
             outputs=[output],
             name=self.name
         )
-
