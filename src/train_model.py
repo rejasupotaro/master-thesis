@@ -40,7 +40,7 @@ def train(config):
     )
 
     get_logger().info('Train model')
-    log_dir = os.path.join(project_dir, 'logs', 'fit', datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    log_dir = os.path.join(project_dir, 'logs', 'fit', f'{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}')
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     history = model.fit(
         train_dataset,
@@ -70,7 +70,7 @@ def train_naive():
 
 
 def train_nrmf():
-    # loss: 0.6076 - accuracy: 0.6374 - val_loss: 0.6244 - val_accuracy: 0.6172
+    # loss: 0.6080 - accuracy: 0.6377 - val_loss: 0.6248 - val_accuracy: 0.6184
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
