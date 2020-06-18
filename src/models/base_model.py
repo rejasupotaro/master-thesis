@@ -1,13 +1,16 @@
 import abc
-import numpy as np
 
+import numpy as np
 from tensorflow.keras import layers
+
+from src.data.data_processors import DataProcessor
 
 
 class BaseModel(abc.ABC):
-    def __init__(self, total_words, total_countries):
-        self.total_words = total_words
-        self.total_countries = total_countries
+    def __init__(self, data_processor: DataProcessor):
+        self.total_words = data_processor.total_words
+        self.total_authors = data_processor.total_authors
+        self.total_countries = data_processor.total_countries
 
     @property
     @abc.abstractmethod

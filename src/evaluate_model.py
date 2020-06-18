@@ -53,7 +53,7 @@ def evaluate(config):
 
 
 def evaluate_naive():
-    # MAP: 0.6186377460644218, NDCG: 0.7089058407731836
+    # MAP: 0.6037210380315634, NDCG: 0.6978183206053716
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'concat_data_processor',
@@ -63,7 +63,7 @@ def evaluate_naive():
 
 
 def evaluate_nrmf():
-    # MAP: 0.4810449111917852, NDCG: 0.5963417479797426
+    # MAP: 0.5582181750294172, NDCG: 0.6601386484807065
     config = {
         'dataset': 'listwise.small',
         'data_processor_filename': 'multi_instance_data_processor',
@@ -72,8 +72,19 @@ def evaluate_nrmf():
     evaluate(config)
 
 
+def evaluate_nrmf_concat():
+    # MAP: 0.6245518197329846, NDCG: 0.7136872418647048
+    config = {
+        'dataset': 'listwise.small',
+        'data_processor_filename': 'concat_data_processor',
+        'model_filename': 'nrmf_concat.h5',
+    }
+    evaluate(config)
+
+
 if __name__ == '__main__':
     create_logger()
     set_seed()
     evaluate_naive()
-    # evaluate_nrmf()
+    evaluate_nrmf()
+    # evaluate_nrmf_concat()

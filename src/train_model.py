@@ -8,7 +8,7 @@ from tensorflow import keras
 
 from src.data import data_processors
 from src.losses import pairwise_losses
-from src.models import naive, nrmf
+from src.models import naive, nrmf, nrmf_concat
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
@@ -27,10 +27,7 @@ def train(config):
     test_dataset = data_processor.transform(test_df)
 
     get_logger().info('Build model')
-    model = config['model'](
-        data_processor.total_words,
-        data_processor.total_countries
-    ).build()
+    model = config['model'](data_processor).build()
     model.summary()
 
     model.compile(
@@ -40,7 +37,8 @@ def train(config):
     )
 
     get_logger().info('Train model')
-    log_dir = os.path.join(project_dir, 'logs', 'fit', f'{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}')
+    log_dir = os.path.join(project_dir, 'logs', 'fit',
+                           f'{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}')
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     history = model.fit(
         train_dataset,
@@ -57,7 +55,7 @@ def train(config):
 
 
 def train_naive():
-    # loss: 0.5260 - accuracy: 0.7331 - val_loss: 0.5359 - val_accuracy: 0.7222
+    # loss: 0.5273 - accuracy: 0.7328 - val_loss: 0.5410 - val_accuracy: 0.7163
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
@@ -70,7 +68,7 @@ def train_naive():
 
 
 def train_nrmf():
-    # loss: 0.5406 - accuracy: 0.7206 - val_loss: 0.5554 - val_accuracy: 0.7024
+    # loss: 0.5326 - accuracy: 0.7274 - val_loss: 0.5495 - val_accuracy: 0.7073
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
@@ -82,18 +80,22 @@ def train_nrmf():
     train(config)
 
 
-if __name__ == '__main__':
-    create_logger()
-    set_seed()
-    train_naive()
-    # train_nrmf()
-
+def train_nrmf_concat():
+    # loss: 0.5213 - accuracy: 0.7378 - val_loss: 0.5327 - val_accuracy: 0.7268
     config = {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(),
         'data_processor_filename': 'concat_data_processor',
-        'model': nrmf.NRMF,
-        'model_filename': 'nrmf.h5',
+        'model': nrmf_concat.NRMFConcat,
+        'model_filename': 'nrmf_concat.h5',
         'epochs': 3,
     }
     train(config)
+
+
+if __name__ == '__main__':
+    create_logger()
+    set_seed()
+    train_naive()
+    train_nrmf()
+    # train_nrmf_concat()
