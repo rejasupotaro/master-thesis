@@ -1,4 +1,5 @@
 import datetime
+import gc
 import os
 import pickle
 from pathlib import Path
@@ -26,6 +27,10 @@ def train(config):
     test_df = data_processor.listwise_to_df(f'{config["dataset"]}.test.pkl')
     test_dataset = data_processor.transform(test_df)
 
+    del train_df
+    del test_df
+    gc.collect()
+
     get_logger().info('Build model')
     model = config['model'](data_processor).build()
     model.summary()
@@ -41,7 +46,7 @@ def train(config):
                            f'{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}')
     callbacks = [
         tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
-        tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
+        tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
     ]
     history = model.fit(
         train_dataset,
