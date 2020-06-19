@@ -39,12 +39,15 @@ def train(config):
     get_logger().info('Train model')
     log_dir = os.path.join(project_dir, 'logs', 'fit',
                            f'{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}')
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+    callbacks = [
+        tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
+        tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
+    ]
     history = model.fit(
         train_dataset,
         epochs=config['epochs'],
         validation_data=test_dataset,
-        callbacks=[tensorboard_callback]
+        callbacks=callbacks
     )
 
     if config['model_filename']:
