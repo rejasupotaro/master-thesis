@@ -6,7 +6,7 @@ from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
 
-def naive():
+def run_naive():
     get_logger().info('Train naive model')
     config = {
         'dataset': 'listwise.medium',
@@ -27,7 +27,7 @@ def naive():
     evaluate_model.evaluate(config)
 
 
-def nrmf():
+def run_nrmf():
     get_logger().info('Train NRM-F')
     config = {
         'dataset': 'listwise.medium',
@@ -48,7 +48,7 @@ def nrmf():
     evaluate_model.evaluate(config)
 
 
-def nrmf_concat():
+def run_nrmf_concat():
     get_logger().info('Train NRM-F (Concat)')
     config = {
         'dataset': 'listwise.medium',
@@ -72,6 +72,6 @@ def nrmf_concat():
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    # naive()
-    nrmf()
-    # nrmf_concat()
+    # run_naive()
+    run_nrmf()
+    # run_nrmf_concat()
