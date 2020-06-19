@@ -14,7 +14,7 @@ if __name__ == '__main__':
         'dataset': 'listwise.medium',
         'data_processor': data_processors.ConcatDataProcessor(),
         'data_processor_filename': 'concat_data_processor',
-        'build_model_fn': naive.Naive,
+        'model': naive.Naive,
         'model_filename': 'naive.h5',
         'epochs': 10,
     }
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         'dataset': 'listwise.medium',
         'data_processor': data_processors.MultiInstanceDataProcessor(),
         'data_processor_filename': 'multi_instance_data_processor',
-        'build_model_fn': nrmf.NRMF,
+        'model': nrmf.NRMF,
         'model_filename': 'nrmf.h5',
         'epochs': 10,
     }
