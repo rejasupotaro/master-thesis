@@ -32,7 +32,8 @@ def evaluate(config):
     get_logger().info('Predict')
     map_scores = []
     ndcg_scores = []
-    for example in tqdm(test_dataset):
+    verbose = config['verbose'] if 'verbose' in config else 1
+    for example in (tqdm(test_dataset) if verbose > 0 else test_dataset):
         rows = []
         for doc in example['docs']:
             row = {
@@ -76,7 +77,7 @@ def evaluate_nrmf_concat():
     # MAP: 0.6245518197329846, NDCG: 0.7136872418647048
     config = {
         'dataset': 'listwise.small',
-        'data_processor_filename': 'concat_data_processor',
+        'data_processor_filename': 'concat_data_processor.small',
         'model_filename': 'nrmf_concat.h5',
     }
     evaluate(config)

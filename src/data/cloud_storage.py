@@ -34,6 +34,9 @@ if __name__ == '__main__':
         'listwise.small.test.pkl',
         'listwise.medium.train.pkl',
         'listwise.medium.test.pkl',
+        'recipes.large.pkl',
+        'recipes.medium.pkl',
+        'recipes.small.pkl',
     ]:
         source = os.path.join(project_dir, 'data', 'processed', filename)
         destination = f'data/processed/{filename}'

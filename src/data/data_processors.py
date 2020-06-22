@@ -15,8 +15,8 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, batch_size=128):
-        self.recipes = load_recipes()
+    def __init__(self, dataset_size, batch_size=128):
+        self.recipes = load_recipes(dataset_size)
         self.tokenizer = None
         self.author_encoder = None
         self.country_encoder = None
@@ -89,6 +89,7 @@ class ConcatDataProcessor(DataProcessor):
         df['description'].fillna('', inplace=True)
         df['author'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['user_id'])
         df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
+        df['label'] = df['label'].astype(float)
 
     def fit(self, df: pd.DataFrame):
         self.process_df(df)
@@ -173,6 +174,7 @@ class MultiInstanceDataProcessor(DataProcessor):
         df['description'].fillna('', inplace=True)
         df['author'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['user_id'])
         df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
+        df['label'] = df['label'].astype(float)
 
     def fit(self, df: pd.DataFrame):
         self.process_df(df)

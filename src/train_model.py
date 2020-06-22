@@ -48,11 +48,13 @@ def train(config):
         tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
         tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
     ]
+    verbose = config['verbose'] if 'verbose' in config else 1
     history = model.fit(
         train_dataset,
         epochs=config['epochs'],
         validation_data=test_dataset,
-        callbacks=callbacks
+        callbacks=callbacks,
+        verbose=verbose,
     )
 
     if config['model_filename']:
@@ -66,8 +68,8 @@ def train_naive():
     # loss: 0.5273 - accuracy: 0.7328 - val_loss: 0.5410 - val_accuracy: 0.7163
     config = {
         'dataset': 'listwise.small',
-        'data_processor': data_processors.ConcatDataProcessor(),
-        'data_processor_filename': 'concat_data_processor',
+        'data_processor': data_processors.ConcatDataProcessor(dataset_size='small'),
+        'data_processor_filename': 'concat_data_processor.small',
         'model': naive.Naive,
         'model_filename': 'naive.h5',
         'epochs': 3,
@@ -79,8 +81,8 @@ def train_nrmf():
     # loss: 0.5326 - accuracy: 0.7274 - val_loss: 0.5495 - val_accuracy: 0.7073
     config = {
         'dataset': 'listwise.small',
-        'data_processor': data_processors.MultiInstanceDataProcessor(),
-        'data_processor_filename': 'multi_instance_data_processor',
+        'data_processor': data_processors.MultiInstanceDataProcessor(dataset_size='small'),
+        'data_processor_filename': 'multi_instance_data_processor.small',
         'model': nrmf.NRMF,
         'model_filename': 'nrmf.h5',
         'epochs': 3,
@@ -92,8 +94,8 @@ def train_nrmf_concat():
     # loss: 0.5213 - accuracy: 0.7378 - val_loss: 0.5327 - val_accuracy: 0.7268
     config = {
         'dataset': 'listwise.small',
-        'data_processor': data_processors.ConcatDataProcessor(),
-        'data_processor_filename': 'concat_data_processor',
+        'data_processor': data_processors.ConcatDataProcessor(dataset_size='small'),
+        'data_processor_filename': 'concat_data_processor.small',
         'model': nrmf_concat.NRMFConcat,
         'model_filename': 'nrmf_concat.h5',
         'epochs': 3,
