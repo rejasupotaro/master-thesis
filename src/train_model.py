@@ -23,11 +23,11 @@ def train(config):
     train_dataset = data_processor.fit_transform(train_df)
     with open(os.path.join(project_dir, 'models', f'{config["data_processor_filename"]}.pkl'), 'wb') as file:
         pickle.dump(data_processor, file)
+    del train_df
+    gc.collect()
 
     test_df = data_processor.listwise_to_df(f'{config["dataset"]}.test.pkl')
     test_dataset = data_processor.transform(test_df)
-
-    del train_df
     del test_df
     gc.collect()
 
@@ -105,5 +105,5 @@ if __name__ == '__main__':
     create_logger()
     set_seed()
     train_naive()
-    train_nrmf()
+    # train_nrmf()
     # train_nrmf_concat()
