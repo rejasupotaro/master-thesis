@@ -1,20 +1,18 @@
 import os
 import pickle
-from collections import defaultdict
 from pathlib import Path
 
-import pandas as pd
 import numpy as np
-from tqdm import tqdm
+import pandas as pd
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
+from src.data.queries import get_popular_queries
+from src.data.recipes import load_available_recipe_ids
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
-from src.data.recipes import load_available_recipe_ids
-from src.data.queries import get_popular_queries
 
 project_dir = Path(__file__).resolve().parents[2]
-
 
 def generate(train_size=0.8):
     """Generate listwise JSON from interctions.csv

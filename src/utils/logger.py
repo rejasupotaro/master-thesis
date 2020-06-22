@@ -1,11 +1,12 @@
 import os
+from logging import getLogger, Formatter, FileHandler, StreamHandler, DEBUG
 from pathlib import Path
-from logging import getLogger, Formatter, FileHandler, StreamHandler, INFO, DEBUG
 
-project_dir = Path(__file__).resolve().parents[2]
-logs_dir = os.path.join(project_dir, 'logs')
 
 def create_logger(version=1):
+    project_dir = Path(__file__).resolve().parents[2]
+    Path(os.path.join(project_dir, 'logs')).mkdir(exist_ok=True)
+    logs_dir = os.path.join(project_dir, 'logs')
     log_file = os.path.join(logs_dir, f'{version}.log')
 
     logger = getLogger(str(version))
