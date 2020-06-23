@@ -64,9 +64,9 @@ def train(config):
     get_logger().info('Done')
 
 
-def train_naive():
+def naive_config():
     # loss: 0.5273 - accuracy: 0.7328 - val_loss: 0.5410 - val_accuracy: 0.7163
-    config = {
+    return {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(dataset_size='small'),
         'data_processor_filename': 'concat_data_processor.small',
@@ -74,12 +74,11 @@ def train_naive():
         'model_filename': 'naive.h5',
         'epochs': 3,
     }
-    train(config)
 
 
-def train_nrmf():
+def nrmf_config():
     # loss: 0.5326 - accuracy: 0.7274 - val_loss: 0.5495 - val_accuracy: 0.7073
-    config = {
+    return {
         'dataset': 'listwise.small',
         'data_processor': data_processors.MultiInstanceDataProcessor(dataset_size='small'),
         'data_processor_filename': 'multi_instance_data_processor.small',
@@ -87,12 +86,11 @@ def train_nrmf():
         'model_filename': 'nrmf.h5',
         'epochs': 3,
     }
-    train(config)
 
 
-def train_nrmf_concat():
+def nrmf_concat_config():
     # loss: 0.5213 - accuracy: 0.7378 - val_loss: 0.5327 - val_accuracy: 0.7268
-    config = {
+    return {
         'dataset': 'listwise.small',
         'data_processor': data_processors.ConcatDataProcessor(dataset_size='small'),
         'data_processor_filename': 'concat_data_processor.small',
@@ -100,12 +98,12 @@ def train_nrmf_concat():
         'model_filename': 'nrmf_concat.h5',
         'epochs': 3,
     }
-    train(config)
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    train_naive()
-    # train_nrmf()
-    # train_nrmf_concat()
+    # config = naive_config()
+    config = nrmf_config()
+    # config = nrmf_concat_config()
+    train(config)

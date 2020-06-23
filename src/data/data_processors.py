@@ -1,5 +1,4 @@
 import abc
-
 import os
 import pickle
 from pathlib import Path
@@ -15,11 +14,13 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size, batch_size=128):
+    def __init__(self, dataset_size, num_words=200000, max_negatives=6, batch_size=128):
         self.recipes = load_recipes(dataset_size)
+        self.num_words = num_words
         self.tokenizer = None
         self.author_encoder = None
         self.country_encoder = None
+        self.max_negatives = max_negatives
         self.batch_size = batch_size
 
     @property
@@ -34,7 +35,7 @@ class DataProcessor(abc.ABC):
     def total_countries(self):
         return len(self.country_encoder.classes_)
 
-    def listwise_to_df(self, listwise_filename: str, max_negatives: int = 10) -> pd.DataFrame:
+    def listwise_to_df(self, listwise_filename: str) -> pd.DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
         with open(os.path.join(project_dir, 'data', 'processed', listwise_filename), 'rb') as file:
             dataset = pickle.load(file)
@@ -56,7 +57,7 @@ class DataProcessor(abc.ABC):
                     negatives.append(data)
 
             for positive in positives:
-                for negative in negatives[:max_negatives]:
+                for negative in negatives[:self.max_negatives]:
                     rows.append(positive)
                     rows.append(negative)
         return pd.DataFrame(rows)
@@ -94,23 +95,24 @@ class ConcatDataProcessor(DataProcessor):
     def fit(self, df: pd.DataFrame):
         self.process_df(df)
 
-        oov_token = '<oov>'
-        sentences = []
-        sentences += df['query'].tolist()
-        sentences += df['title'].tolist()
-        sentences += df['ingredients'].tolist()
-        sentences += df['description'].tolist()
+        sentences = set()
+        sentences |= set(df['query'])
+        sentences |= set(df['title'])
+        sentences |= set(df['ingredients'])
+        sentences |= set(df['description'])
         self.tokenizer = Tokenizer(
-            oov_token=oov_token,
-            char_level=False
+            oov_token='<OOV>',
+            char_level=False,
+            num_words=self.num_words,
         )
         self.tokenizer.fit_on_texts(sentences)
+        del sentences
 
         self.author_encoder = LabelEncoder()
-        self.author_encoder.fit(df['author'].tolist() + [''])
+        self.author_encoder.fit(list(set(df['author']) | {''}))
 
         self.country_encoder = LabelEncoder()
-        self.country_encoder.fit(df['country'].tolist() + [''])
+        self.country_encoder.fit(list(set(df['country']) | {''}))
 
     def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
         self.process_df(df)
@@ -179,22 +181,24 @@ class MultiInstanceDataProcessor(DataProcessor):
     def fit(self, df: pd.DataFrame):
         self.process_df(df)
 
-        oov_token = '<OOV>'
-        sentences = []
-        sentences += df['query'].tolist()
-        sentences += df['title'].tolist()
-        sentences += [ingredient for ingredients in df['ingredients'].tolist() for ingredient in ingredients]
+        sentences = set()
+        sentences |= set(df['query'])
+        sentences |= set(df['title'])
+        sentences |= {ingredient for ingredients in df['ingredients'].tolist() for ingredient in ingredients}
+        sentences |= set(df['description'])
         self.tokenizer = Tokenizer(
-            oov_token=oov_token,
-            char_level=False
+            oov_token='<OOV>',
+            char_level=False,
+            num_words=self.num_words,
         )
         self.tokenizer.fit_on_texts(sentences)
+        del sentences
 
         self.author_encoder = LabelEncoder()
-        self.author_encoder.fit(df['author'].tolist() + [''])
+        self.author_encoder.fit(list(set(df['author']) | {''}))
 
         self.country_encoder = LabelEncoder()
-        self.country_encoder.fit(df['country'].tolist() + [''])
+        self.country_encoder.fit(list(set(df['country']) | {''}))
 
     def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
         self.process_df(df)

@@ -11,10 +11,10 @@ from src.evaluate_model import evaluate
 from src.utils.logger import create_logger, get_logger
 
 
-def naive_config():
+def naive_config(dataset_size):
     train_config = {
-        'dataset': 'listwise.small',
-        'data_processor': data_processors.ConcatDataProcessor(dataset_size='small'),
+        'dataset': f'listwise.{dataset_size}',
+        'data_processor': data_processors.ConcatDataProcessor(dataset_size=dataset_size),
         'data_processor_filename': 'concat_data_processor',
         'model': naive.Naive,
         'model_filename': 'naive.h5',
@@ -22,7 +22,7 @@ def naive_config():
         'verbose': 2,
     }
     eval_config = {
-        'dataset': 'listwise.small',
+        'dataset': f'listwise.{dataset_size}',
         'data_processor_filename': 'concat_data_processor',
         'model_filename': 'naive.h5',
         'verbose': 0,
@@ -30,10 +30,10 @@ def naive_config():
     return train_config, eval_config
 
 
-def nrmf_config():
+def nrmf_config(dataset_size):
     train_config = {
-        'dataset': 'listwise.small',
-        'data_processor': data_processors.MultiInstanceDataProcessor(dataset_size='small'),
+        'dataset': f'listwise.{dataset_size}',
+        'data_processor': data_processors.MultiInstanceDataProcessor(dataset_size=dataset_size),
         'data_processor_filename': 'multi_instance_data_processor',
         'model': nrmf.NRMF,
         'model_filename': 'nrmf.h5',
@@ -41,7 +41,7 @@ def nrmf_config():
         'verbose': 2,
     }
     eval_config = {
-        'dataset': 'listwise.small',
+        'dataset': f'listwise.{dataset_size}',
         'data_processor_filename': 'multi_instance_data_processor',
         'model_filename': 'nrmf.h5',
         'verbose': 0,
@@ -49,10 +49,10 @@ def nrmf_config():
     return train_config, eval_config
 
 
-def nrmf_concat_config():
+def nrmf_concat_config(dataset_size):
     train_config = {
-        'dataset': 'listwise.small',
-        'data_processor': data_processors.ConcatDataProcessor(dataset_size='small'),
+        'dataset': f'listwise.{dataset_size}',
+        'data_processor': data_processors.ConcatDataProcessor(dataset_size=dataset_size),
         'data_processor_filename': 'concat_data_processor',
         'model': nrmf_concat.NRMFConcat,
         'model_filename': 'nrmf_concat.h5',
@@ -60,7 +60,7 @@ def nrmf_concat_config():
         'verbose': 2,
     }
     eval_config = {
-        'dataset': 'listwise.small',
+        'dataset': f'listwise.{dataset_size}',
         'data_processor_filename': 'concat_data_processor',
         'model_filename': 'nrmf_concat.h5',
         'verbose': 0,
@@ -71,7 +71,9 @@ def nrmf_concat_config():
 @click.command()
 @click.option('--job-dir')
 @click.option('--bucket-name')
-def main(job_dir, bucket_name):
+@click.option('--model-name')
+@click.option('--dataset-size')
+def main(job_dir, bucket_name, model_name, dataset_size):
     get_logger().info(f'Task is lauched with arguments job-dir: {job_dir}, bucket-name: {bucket_name}')
 
     get_logger().info('Download data')
@@ -79,16 +81,20 @@ def main(job_dir, bucket_name):
     Path(os.path.join(project_dir, 'data', 'raw')).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(project_dir, 'data', 'processed')).mkdir(parents=True, exist_ok=True)
     Path(os.path.join(project_dir, 'models')).mkdir(exist_ok=True)
-    CloudStorage(bucket_name).download('data/processed/recipes.small.pkl',
-                                       os.path.join(project_dir, 'data', 'processed', 'recipes.small.pkl'))
-    CloudStorage(bucket_name).download('data/processed/listwise.small.train.pkl',
-                                       os.path.join(project_dir, 'data', 'processed', 'listwise.small.train.pkl'))
-    CloudStorage(bucket_name).download('data/processed/listwise.small.test.pkl',
-                                       os.path.join(project_dir, 'data', 'processed', 'listwise.small.test.pkl'))
+    CloudStorage(bucket_name).download(f'data/processed/recipes.{dataset_size}.pkl',
+                                       os.path.join(project_dir, 'data', 'processed', f'recipes.{dataset_size}.pkl'))
+    CloudStorage(bucket_name).download(f'data/processed/listwise.{dataset_size}.train.pkl',
+                                       os.path.join(project_dir, 'data', 'processed',
+                                                    f'listwise.{dataset_size}.train.pkl'))
+    CloudStorage(bucket_name).download(f'data/processed/listwise.{dataset_size}.test.pkl',
+                                       os.path.join(project_dir, 'data', 'processed',
+                                                    f'listwise.{dataset_size}.test.pkl'))
 
-    # train_config, eval_config = naive_config()
-    # train_config, eval_config = nrmf_config()
-    train_config, eval_config = nrmf_concat_config()
+    train_config, eval_config = {
+        'naive': naive_config,
+        'nrmf': nrmf_config,
+        'nrmf_concat': nrmf_concat_config,
+    }[model_name](dataset_size)
 
     get_logger().info('Train model')
     train(train_config)
