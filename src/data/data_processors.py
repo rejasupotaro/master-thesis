@@ -13,7 +13,7 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size, num_words=200000, max_negatives=6, batch_size=128):
+    def __init__(self, dataset_size, num_words=200000, max_negatives=10, batch_size=128):
         self.recipes = load_recipes(dataset_size)
         self.num_words = num_words
         self.tokenizer = None
@@ -229,9 +229,9 @@ class MultiInstanceDataProcessor(DataProcessor):
                                              padding='post',
                                              truncating='post',
                                              maxlen=100)
-        author = df['author'].tolist()
-        country = df['country'].tolist()
-        label = df['label'].tolist()
+        author = df['author'].to_numpy()
+        country = df['country'].to_numpy()
+        label = df['label'].to_numpy()
 
         return {
                    'query_word_ids': query_word_ids,

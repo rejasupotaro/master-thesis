@@ -46,8 +46,8 @@ def train(config):
         tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
     ]
     verbose = config['verbose'] if 'verbose' in config else 1
-    history = model.fit_generator(
-        generator=train_generator,
+    history = model.fit(
+        train_generator,
         epochs=config['epochs'],
         validation_data=test_generator,
         callbacks=callbacks,
