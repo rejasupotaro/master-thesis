@@ -1,5 +1,4 @@
 import datetime
-import gc
 import os
 import pickle
 from pathlib import Path
@@ -8,6 +7,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from src.data import data_processors
+from src.data.data_generator import DataGenerator
 from src.losses import pairwise_losses
 from src.models import naive, nrmf, nrmf_concat
 from src.utils.logger import create_logger, get_logger
@@ -19,17 +19,14 @@ project_dir = Path(__file__).resolve().parents[1]
 def train(config):
     get_logger().info('Transform examples into dataset')
     data_processor = config['data_processor']
+
     train_df = data_processor.listwise_to_df(f'{config["dataset"]}.train.pkl')
-    train_dataset = data_processor.fit_transform(train_df)
+    test_df = data_processor.listwise_to_df(f'{config["dataset"]}.test.pkl')
+    data_processor.fit(train_df)
     with open(os.path.join(project_dir, 'models', f'{config["data_processor_filename"]}.pkl'), 'wb') as file:
         pickle.dump(data_processor, file)
-    del train_df
-    gc.collect()
-
-    test_df = data_processor.listwise_to_df(f'{config["dataset"]}.test.pkl')
-    test_dataset = data_processor.transform(test_df)
-    del test_df
-    gc.collect()
+    train_generator = DataGenerator(train_df, data_processor)
+    test_generator = DataGenerator(test_df, data_processor)
 
     get_logger().info('Build model')
     model = config['model'](data_processor).build()
@@ -49,10 +46,10 @@ def train(config):
         tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
     ]
     verbose = config['verbose'] if 'verbose' in config else 1
-    history = model.fit(
-        train_dataset,
+    history = model.fit_generator(
+        generator=train_generator,
         epochs=config['epochs'],
-        validation_data=test_dataset,
+        validation_data=test_generator,
         callbacks=callbacks,
         verbose=verbose,
     )
@@ -103,7 +100,7 @@ def nrmf_concat_config():
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    # config = naive_config()
-    config = nrmf_config()
+    config = naive_config()
+    # config = nrmf_config()
     # config = nrmf_concat_config()
     train(config)

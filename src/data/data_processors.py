@@ -4,7 +4,6 @@ import pickle
 from pathlib import Path
 
 import pandas as pd
-import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -24,15 +23,15 @@ class DataProcessor(abc.ABC):
         self.batch_size = batch_size
 
     @property
-    def total_words(self):
+    def total_words(self) -> int:
         return len(self.tokenizer.word_index) + 1
 
     @property
-    def total_authors(self):
+    def total_authors(self) -> int:
         return len(self.author_encoder.classes_)
 
     @property
-    def total_countries(self):
+    def total_countries(self) -> int:
         return len(self.country_encoder.classes_)
 
     def listwise_to_df(self, listwise_filename: str) -> pd.DataFrame:
@@ -71,12 +70,8 @@ class DataProcessor(abc.ABC):
         raise NotImplementedError('Calling an abstract method.')
 
     @abc.abstractmethod
-    def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+    def process_batch(self, df: pd.DataFrame):
         raise NotImplementedError('Calling an abstract method.')
-
-    def fit_transform(self, df: pd.DataFrame) -> tf.data.Dataset:
-        self.fit(df)
-        return self.transform(df)
 
 
 class ConcatDataProcessor(DataProcessor):
@@ -114,7 +109,8 @@ class ConcatDataProcessor(DataProcessor):
         self.country_encoder = LabelEncoder()
         self.country_encoder.fit(list(set(df['country']) | {''}))
 
-    def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+    def process_batch(self, df: pd.DataFrame):
+        df = df.copy()
         self.process_df(df)
 
         df['query_word_ids'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
@@ -149,21 +145,18 @@ class ConcatDataProcessor(DataProcessor):
                                              padding='post',
                                              truncating='post',
                                              maxlen=100)
-        author = df['author'].tolist()
-        country = df['country'].tolist()
-        label = df['label'].tolist()
+        author = df['author'].to_numpy()
+        country = df['country'].to_numpy()
+        label = df['label'].to_numpy()
 
-        return tf.data.Dataset.from_tensor_slices((
-            {
-                'query_word_ids': query_word_ids,
-                'title_word_ids': title_word_ids,
-                'ingredients_word_ids': ingredients_word_ids,
-                'description_word_ids': description_word_ids,
-                'author': author,
-                'country': country
-            },
-            {'label': label}
-        )).batch(self.batch_size)
+        return {
+                   'query_word_ids': query_word_ids,
+                   'title_word_ids': title_word_ids,
+                   'ingredients_word_ids': ingredients_word_ids,
+                   'description_word_ids': description_word_ids,
+                   'author': author,
+                   'country': country
+               }, label
 
 
 class MultiInstanceDataProcessor(DataProcessor):
@@ -200,7 +193,8 @@ class MultiInstanceDataProcessor(DataProcessor):
         self.country_encoder = LabelEncoder()
         self.country_encoder.fit(list(set(df['country']) | {''}))
 
-    def transform(self, df: pd.DataFrame) -> tf.data.Dataset:
+    def process_batch(self, df: pd.DataFrame):
+        df = df.copy()
         self.process_df(df)
 
         df['query_word_ids'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
@@ -239,14 +233,11 @@ class MultiInstanceDataProcessor(DataProcessor):
         country = df['country'].tolist()
         label = df['label'].tolist()
 
-        return tf.data.Dataset.from_tensor_slices((
-            {
-                'query_word_ids': query_word_ids,
-                'title_word_ids': title_word_ids,
-                'ingredients_word_ids': ingredients_word_ids,
-                'description_word_ids': description_word_ids,
-                'author': author,
-                'country': country
-            },
-            {'label': label}
-        )).batch(self.batch_size)
+        return {
+                   'query_word_ids': query_word_ids,
+                   'title_word_ids': title_word_ids,
+                   'ingredients_word_ids': ingredients_word_ids,
+                   'description_word_ids': description_word_ids,
+                   'author': author,
+                   'country': country
+               }, label

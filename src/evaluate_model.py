@@ -4,10 +4,12 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 from tensorflow import keras
 from tqdm import tqdm
 
 from src.losses import pairwise_losses
+from src.data.data_generator import DataGenerator
 from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
@@ -42,50 +44,49 @@ def evaluate(config):
                 'label': doc['label']
             }
             rows.append(row)
-        test_df = pd.DataFrame(rows)
-        test_dataset = data_processor.transform(test_df)
-        preds = model.predict(test_dataset)
-        test_df['pred'] = preds
-        y_true = test_df['label'].tolist()
-        y_pred = test_df['pred'].tolist()
+        df = pd.DataFrame(rows)
+        x, y = data_processor.process_batch(df)
+        dataset = tf.data.Dataset.from_tensor_slices((x, {'label': y})).batch(128)
+        preds = model.predict(dataset, verbose=0)
+        df['pred'] = preds
+        y_true = df['label'].tolist()
+        y_pred = df['pred'].tolist()
         map_scores.append(metrics.mean_average_precision(y_true, y_pred))
         ndcg_scores.append(metrics.normalized_discount_cumulative_gain(y_true, y_pred))
     get_logger().info(f'MAP: {np.mean(map_scores)}, NDCG: {np.mean(ndcg_scores)}')
 
 
-def evaluate_naive():
+def naive_config():
     # MAP: 0.6037210380315634, NDCG: 0.6978183206053716
-    config = {
+    return {
         'dataset': 'listwise.small',
-        'data_processor_filename': 'concat_data_processor',
+        'data_processor_filename': 'concat_data_processor.small',
         'model_filename': 'naive.h5',
     }
-    evaluate(config)
 
 
-def evaluate_nrmf():
+def nrmf_config():
     # MAP: 0.5582181750294172, NDCG: 0.6601386484807065
-    config = {
+    return {
         'dataset': 'listwise.small',
-        'data_processor_filename': 'multi_instance_data_processor',
+        'data_processor_filename': 'multi_instance_data_processor.small',
         'model_filename': 'nrmf.h5',
     }
-    evaluate(config)
 
 
-def evaluate_nrmf_concat():
+def nrmf_concat_config():
     # MAP: 0.6245518197329846, NDCG: 0.7136872418647048
-    config = {
+    return {
         'dataset': 'listwise.small',
         'data_processor_filename': 'concat_data_processor.small',
         'model_filename': 'nrmf_concat.h5',
     }
-    evaluate(config)
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
-    evaluate_naive()
-    evaluate_nrmf()
-    # evaluate_nrmf_concat()
+    config = naive_config()
+    # config = nrmf_config()
+    # config = nrmf_concat_config()
+    evaluate(config)
