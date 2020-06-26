@@ -5,6 +5,7 @@ from pathlib import Path
 
 import tensorflow as tf
 from tensorflow import keras
+import mlflow
 
 from src.data import data_processors
 from src.data.data_generator import DataGenerator
@@ -20,6 +21,8 @@ project_dir = Path(__file__).resolve().parents[1]
 
 
 def train(config):
+    mlflow.log_params(config)
+
     get_logger().info('Transform examples into dataset')
     data_processor = config['data_processor']
 
@@ -57,6 +60,11 @@ def train(config):
         verbose=verbose,
     )
 
+    get_logger().info(history.history)
+    for metric in history.history:
+        for i, value in enumerate(history.history[metric]):
+            mlflow.log_metric(metric, value, step=i)
+
     if config['model_filename']:
         get_logger().info('Save model')
         model.save(os.path.join(project_dir, 'models', config['model_filename']))
@@ -72,7 +80,7 @@ def naive_config():
         'data_processor_filename': 'concat_data_processor.small',
         'model': naive.Naive,
         'model_filename': 'naive.h5',
-        'epochs': 3,
+        'epochs': 2,
     }
 
 
@@ -103,7 +111,13 @@ def nrmf_concat_config():
 if __name__ == '__main__':
     create_logger()
     set_seed()
+    mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
+    mlflow.start_run()
+
     config = naive_config()
     # config = nrmf_config()
     # config = nrmf_concat_config()
     train(config)
+
+    mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
+    mlflow.end_run()

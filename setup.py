@@ -7,17 +7,25 @@
 from setuptools import setup
 from setuptools import find_packages
 
+readme = ''
+
 setup(
+    long_description=readme,
     name='src',
     version='0.1.0',
     python_requires='==3.7.7',
     author='Kentaro Takiguchi',
     packages=find_packages(),
+    package_dir={"master-thesis": "src"},
+    package_data={},
     install_requires=[
-        'click==7.*,>=7.1.2', 'graphviz==0.*,>=0.14.0',
-        'jupyterlab==2.*,>=2.1.3', 'matplotlib==3.*,>=3.2.1',
-        'numpy==1.*,>=1.18.4', 'pandas==1.*,>=1.0.3', 'pydot==1.*,>=1.4.1',
+        'click==7.*,>=7.1.2', 'google-cloud-storage==1.*,>=1.29.0',
+        'graphviz==0.*,>=0.14.0', 'jupyterlab==2.*,>=2.1.3',
+        'matplotlib==3.*,>=3.2.1', 'mlflow==1.*,>=1.9.1', 'numpy==1.*,>=1.18.4',
+        'pandas==1.*,>=1.0.3', 'pydot==1.*,>=1.4.1',
         'python-dotenv==0.*,>=0.13.0', 'seaborn==0.*,>=0.10.1',
-        'sklearn==0.*,>=0.0.0', 'tensorflow==2.1', 'tqdm==4.*,>=4.46.0'
-    ]
+        'sklearn==0.*,>=0.0.0', 'tensorflow-estimator==2.1',
+        'tqdm==4.*,>=4.46.0'
+    ],
+    extras_require={"dev": ["jupyter==1.*,>=1.0.0", "pytest==3.*,>=3.4.0"]},
 )

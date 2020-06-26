@@ -2,6 +2,7 @@ import os
 import pickle
 from pathlib import Path
 
+import mlflow
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -9,7 +10,6 @@ from tensorflow import keras
 from tqdm import tqdm
 
 from src.losses import pairwise_losses
-from src.data.data_generator import DataGenerator
 from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
@@ -53,7 +53,12 @@ def evaluate(config):
         y_pred = df['pred'].tolist()
         map_scores.append(metrics.mean_average_precision(y_true, y_pred))
         ndcg_scores.append(metrics.normalized_discount_cumulative_gain(y_true, y_pred))
-    get_logger().info(f'MAP: {np.mean(map_scores)}, NDCG: {np.mean(ndcg_scores)}')
+
+    map_score = np.mean(map_scores)
+    ndcg_score = np.mean(ndcg_scores)
+    get_logger().info(f'MAP: {map_score}, NDCG: {ndcg_score}')
+    mlflow.log_metric('MAP', map_score)
+    mlflow.log_metric('NDCG', ndcg_score)
 
 
 def naive_config():
