@@ -15,6 +15,9 @@ from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[1]
 
+# https://www.tensorflow.org/api_docs/python/tf/keras/backend/set_floatx
+# tf.keras.mixed_precision.experimental.set_policy('mixed_float16')
+
 
 def train(config):
     get_logger().info('Transform examples into dataset')
