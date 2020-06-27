@@ -13,14 +13,14 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size, num_words=200000, max_negatives=10, batch_size=128):
+    def __init__(self, dataset_size: int, num_words: int = 200000, max_negatives: int = 10, batch_size: int = 128):
         self.recipes = load_recipes(dataset_size)
-        self.num_words = num_words
-        self.tokenizer = None
-        self.author_encoder = None
-        self.country_encoder = None
-        self.max_negatives = max_negatives
-        self.batch_size = batch_size
+        self.num_words: int = num_words
+        self.tokenizer: Tokenizer = None
+        self.author_encoder: LabelEncoder = None
+        self.country_encoder: LabelEncoder = None
+        self.max_negatives: int = max_negatives
+        self.batch_size: int = batch_size
 
     @property
     def total_words(self) -> int:

@@ -45,5 +45,5 @@ def load_available_recipe_ids() -> set:
 
 
 if __name__ == '__main__':
-    recipes = load_recipes()
+    recipes = load_recipes(size='small')
     print(len(recipes))

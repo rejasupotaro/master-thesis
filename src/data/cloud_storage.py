@@ -3,6 +3,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from google.cloud import storage
+from google.cloud.storage import Bucket
 
 from src.utils.logger import create_logger, get_logger
 
@@ -13,13 +14,13 @@ class CloudStorage:
     def __init__(self, bucket_name=None):
         if not bucket_name:
             bucket_name = os.getenv('BUCKET_NAME')
-        self.bucket = storage.Client().bucket(bucket_name)
+        self.bucket: Bucket = storage.Client().bucket(bucket_name)
 
-    def upload(self, source, destination):
+    def upload(self, source: str, destination: str):
         blob = self.bucket.blob(destination)
         blob.upload_from_filename(source)
 
-    def download(self, source, destination):
+    def download(self, source: str, destination: str):
         blob = self.bucket.blob(source)
         blob.download_to_filename(destination)
 

@@ -15,7 +15,7 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def generate(train_size=0.8):
+def generate(train_size: float = 0.8):
     """Generate listwise JSON from interctions.csv
     The JSON format is like below.
     [

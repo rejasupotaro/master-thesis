@@ -3,7 +3,7 @@ from typing import List
 import pandas as pd
 
 
-def preprocess_query(query: str):
+def preprocess_query(query: str) -> str:
     return str(query).replace('"', '')
 
 
