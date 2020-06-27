@@ -20,8 +20,6 @@ project_dir = Path(__file__).resolve().parents[1]
 
 
 def evaluate(config: EvalConfig):
-    mlflow.log_params(asdict(config))
-
     get_logger().info('Load model')
     filepath = os.path.join(project_dir, 'models', config.model_filename)
     custom_objects = {
@@ -97,6 +95,7 @@ if __name__ == '__main__':
     config = naive_config()
     # config = nrmf_config()
     # config = nrmf_concat_config()
+    mlflow.log_params(asdict(config))
     evaluate(config)
 
     mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))

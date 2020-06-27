@@ -8,7 +8,7 @@ import mlflow
 import tensorflow as tf
 from tensorflow import keras
 
-from config import TrainConfig
+from src.config import TrainConfig
 from src.data import data_processors
 from src.data.data_generator import DataGenerator
 from src.losses import pairwise_losses

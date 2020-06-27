@@ -124,14 +124,13 @@ def main(job_dir, bucket_name, model_name, dataset_size):
     get_logger().info('Evaluate model')
     evaluate(eval_config)
 
+    get_logger().info('Upload results')
     mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
     base_filepath = os.path.join(project_dir, 'logs', 'mlruns', experiment_id)
-    get_logger().info(f'base_filepath: {base_filepath}')
     for file in Path(base_filepath).rglob('*'):
         if file.is_file():
             filename = str(file)[len(base_filepath) + 1:]
             destination = f'logs/mlruns/{experiment_id}/{filename}'
-            get_logger().info(f'Upload {str(file)} to {destination}')
             bucket.upload(str(file), destination)
 
     mlflow.end_run()
