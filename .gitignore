@@ -87,4 +87,4 @@ target/
 
 .venv/
 pip-wheel-metadata/
-hidden/
+private/
