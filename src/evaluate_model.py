@@ -1,5 +1,6 @@
 import os
 import pickle
+from dataclasses import asdict
 from pathlib import Path
 
 import mlflow
@@ -9,6 +10,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tqdm import tqdm
 
+from src.config import EvalConfig
 from src.losses import pairwise_losses
 from src.metrics import metrics
 from src.utils.logger import create_logger, get_logger
@@ -17,25 +19,26 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def evaluate(config):
+def evaluate(config: EvalConfig):
+    mlflow.log_params(asdict(config))
+
     get_logger().info('Load model')
-    filepath = os.path.join(project_dir, 'models', config['model_filename'])
+    filepath = os.path.join(project_dir, 'models', config.model_filename)
     custom_objects = {
         'cross_entropy_loss': pairwise_losses.cross_entropy_loss
     }
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
     get_logger().info('Load test dataset')
-    with open(os.path.join(project_dir, 'models', f'{config["data_processor_filename"]}.pkl'), 'rb') as file:
+    with open(os.path.join(project_dir, 'models', f'{config.data_processor_filename}.pkl'), 'rb') as file:
         data_processor = pickle.load(file)
-    with open(os.path.join(project_dir, 'data', 'processed', f'{config["dataset"]}.test.pkl'), 'rb') as file:
+    with open(os.path.join(project_dir, 'data', 'processed', f'{config.dataset}.test.pkl'), 'rb') as file:
         test_dataset = pickle.load(file)
 
     get_logger().info('Predict')
     map_scores = []
     ndcg_scores = []
-    verbose = config['verbose'] if 'verbose' in config else 1
-    for example in (tqdm(test_dataset) if verbose > 0 else test_dataset):
+    for example in (tqdm(test_dataset) if config.verbose > 0 else test_dataset):
         rows = []
         for doc in example['docs']:
             row = {
@@ -61,37 +64,40 @@ def evaluate(config):
     mlflow.log_metric('NDCG', ndcg_score)
 
 
-def naive_config():
-    # MAP: 0.6037210380315634, NDCG: 0.6978183206053716
-    return {
-        'dataset': 'listwise.small',
-        'data_processor_filename': 'concat_data_processor.small',
-        'model_filename': 'naive.h5',
-    }
+def naive_config() -> EvalConfig:
+    return EvalConfig(
+        dataset='listwise.small',
+        data_processor_filename='concat_data_processor.small',
+        model_filename='naive.h5',
+    )
 
 
-def nrmf_config():
-    # MAP: 0.5582181750294172, NDCG: 0.6601386484807065
-    return {
-        'dataset': 'listwise.small',
-        'data_processor_filename': 'multi_instance_data_processor.small',
-        'model_filename': 'nrmf.h5',
-    }
+def nrmf_config() -> EvalConfig:
+    return EvalConfig(
+        dataset='listwise.small',
+        data_processor_filename='multi_instance_data_processor.small',
+        model_filename='nrmf.h5',
+    )
 
 
-def nrmf_concat_config():
-    # MAP: 0.6245518197329846, NDCG: 0.7136872418647048
-    return {
-        'dataset': 'listwise.small',
-        'data_processor_filename': 'concat_data_processor.small',
-        'model_filename': 'nrmf_concat.h5',
-    }
+def nrmf_concat_config() -> EvalConfig:
+    return EvalConfig(
+        dataset='listwise.small',
+        data_processor_filename='concat_data_processor.small',
+        model_filename='nrmf_concat.h5',
+    )
 
 
 if __name__ == '__main__':
     create_logger()
     set_seed()
+    mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
+    mlflow.start_run()
+
     config = naive_config()
     # config = nrmf_config()
     # config = nrmf_concat_config()
     evaluate(config)
+
+    mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
+    mlflow.end_run()

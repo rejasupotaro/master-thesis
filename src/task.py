@@ -1,78 +1,78 @@
 import json
 import os
 from pathlib import Path
+from typing import Tuple
 
 import click
+import mlflow
 import tensorflow as tf
+from mlflow.tracking import MlflowClient
 
+from src.config import TrainConfig, EvalConfig
 from src.data import data_processors
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
 from src.models import naive, nrmf, nrmf_concat
 from src.train_model import train
 from src.utils.logger import create_logger, get_logger
-import os
-import mlflow
-from  mlflow.tracking import MlflowClient
-
 
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def naive_config(dataset_size):
-    train_config = {
-        'dataset': f'listwise.{dataset_size}',
-        'data_processor': data_processors.ConcatDataProcessor(dataset_size=dataset_size),
-        'data_processor_filename': f'concat_data_processor.{dataset_size}',
-        'model': naive.Naive,
-        'model_filename': 'naive.h5',
-        'epochs': 1,
-        'verbose': 2,
-    }
-    eval_config = {
-        'dataset': f'listwise.{dataset_size}',
-        'data_processor_filename': f'concat_data_processor.{dataset_size}',
-        'model_filename': 'naive.h5',
-        'verbose': 0,
-    }
+def naive_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=data_processors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=naive.Naive,
+        model_filename='naive.h5',
+        epochs=1,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_filename='naive.h5',
+        verbose=0,
+    )
     return train_config, eval_config
 
 
-def nrmf_config(dataset_size):
-    train_config = {
-        'dataset': f'listwise.{dataset_size}',
-        'data_processor': data_processors.MultiInstanceDataProcessor(dataset_size=dataset_size),
-        'data_processor_filename': f'multi_instance_data_processor.{dataset_size}',
-        'model': nrmf.NRMF,
-        'model_filename': 'nrmf.h5',
-        'epochs': 1,
-        'verbose': 2,
-    }
-    eval_config = {
-        'dataset': f'listwise.{dataset_size}',
-        'data_processor_filename': f'multi_instance_data_processor.{dataset_size}',
-        'model_filename': 'nrmf.h5',
-        'verbose': 0,
-    }
+def nrmf_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=data_processors.MultiInstanceDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
+        model=nrmf.NRMF,
+        model_filename='nrmf.h5',
+        epochs=1,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
+        model_filename='nrmf.h5',
+        verbose=0,
+    )
     return train_config, eval_config
 
 
-def nrmf_concat_config(dataset_size):
-    train_config = {
-        'dataset': f'listwise.{dataset_size}',
-        'data_processor': data_processors.ConcatDataProcessor(dataset_size=dataset_size),
-        'data_processor_filename': f'concat_data_processor.{dataset_size}',
-        'model': nrmf_concat.NRMFConcat,
-        'model_filename': 'nrmf_concat.h5',
-        'epochs': 1,
-        'verbose': 2,
-    }
-    eval_config = {
-        'dataset': f'listwise.{dataset_size}',
-        'data_processor_filename': f'concat_data_processor.{dataset_size}',
-        'model_filename': 'nrmf_concat.h5',
-        'verbose': 0,
-    }
+def nrmf_concat_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=data_processors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=nrmf_concat.NRMFConcat,
+        model_filename='nrmf_concat.h5',
+        epochs=1,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_filename='nrmf_concat.h5',
+        verbose=0,
+    )
     return train_config, eval_config
 
 
@@ -129,7 +129,7 @@ def main(job_dir, bucket_name, model_name, dataset_size):
     get_logger().info(f'base_filepath: {base_filepath}')
     for file in Path(base_filepath).rglob('*'):
         if file.is_file():
-            filename = str(file)[len(base_filepath)+1:]
+            filename = str(file)[len(base_filepath) + 1:]
             destination = f'logs/mlruns/{experiment_id}/{filename}'
             get_logger().info(f'Upload {str(file)} to {destination}')
             bucket.upload(str(file), destination)
