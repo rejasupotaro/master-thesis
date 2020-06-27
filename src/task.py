@@ -19,14 +19,14 @@ from src.utils.logger import create_logger, get_logger
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def naive_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
+def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor=data_processors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
         model=naive.Naive,
         model_filename='naive.h5',
-        epochs=1,
+        epochs=epochs,
         verbose=2,
     )
     eval_config = EvalConfig(
@@ -38,14 +38,14 @@ def naive_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
     return train_config, eval_config
 
 
-def nrmf_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
+def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor=data_processors.MultiInstanceDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
         model=nrmf.NRMF,
         model_filename='nrmf.h5',
-        epochs=1,
+        epochs=epochs,
         verbose=2,
     )
     eval_config = EvalConfig(
@@ -57,14 +57,14 @@ def nrmf_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
     return train_config, eval_config
 
 
-def nrmf_concat_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
+def nrmf_concat_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor=data_processors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
         model=nrmf_concat.NRMFConcat,
         model_filename='nrmf_concat.h5',
-        epochs=1,
+        epochs=epochs,
         verbose=2,
     )
     eval_config = EvalConfig(
@@ -77,11 +77,12 @@ def nrmf_concat_config(dataset_size) -> Tuple[TrainConfig, EvalConfig]:
 
 
 @click.command()
-@click.option('--job-dir')
-@click.option('--bucket-name')
-@click.option('--model-name')
-@click.option('--dataset-size')
-def main(job_dir, bucket_name, model_name, dataset_size):
+@click.option('--job-dir', type=str)
+@click.option('--bucket-name', type=str)
+@click.option('--model-name', type=str)
+@click.option('--dataset-size', type=str)
+@click.option('--epochs', type=int, default=1)
+def main(job_dir: str, bucket_name: str, model_name: str, dataset_size: str, epochs: int):
     mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
     mlflow.start_run()
     client = MlflowClient()
@@ -96,7 +97,10 @@ def main(job_dir, bucket_name, model_name, dataset_size):
     cluster_info = env.get('cluster', None)
     cluster_spec = tf.train.ClusterSpec(cluster_info)
     # {'type': 'worker', 'index': 3, 'cloud': 'w93a1503672d4dd09-ml'}
-    get_logger().info(f'[ClusterSpec] {cluster_spec}')
+    task_info = env.get('task', None)
+    job_name, task_index = task_info['type'], task_info['index']
+    get_logger().info(f'cluster_spec {cluster_spec}, job_name: {job_name}, task_index: {task_index}')
+
     get_logger().info(f'Task is lauched with arguments job-dir: {job_dir}, bucket-name: {bucket_name}')
 
     get_logger().info('Download data')
@@ -117,21 +121,22 @@ def main(job_dir, bucket_name, model_name, dataset_size):
         'naive': naive_config,
         'nrmf': nrmf_config,
         'nrmf_concat': nrmf_concat_config,
-    }[model_name](dataset_size)
+    }[model_name](dataset_size, epochs)
 
     get_logger().info('Train model')
     train(train_config)
     get_logger().info('Evaluate model')
     evaluate(eval_config)
 
-    get_logger().info('Upload results')
-    mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
-    base_filepath = os.path.join(project_dir, 'logs', 'mlruns', experiment_id)
-    for file in Path(base_filepath).rglob('*'):
-        if file.is_file():
-            filename = str(file)[len(base_filepath) + 1:]
-            destination = f'logs/mlruns/{experiment_id}/{filename}'
-            bucket.upload(str(file), destination)
+    if job_name == 'chief':
+        get_logger().info('Upload results')
+        mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
+        base_filepath = os.path.join(project_dir, 'logs', 'mlruns', experiment_id)
+        for file in Path(base_filepath).rglob('*'):
+            if file.is_file():
+                filename = str(file)[len(base_filepath) + 1:]
+                destination = f'logs/mlruns/{experiment_id}/{filename}'
+                bucket.upload(str(file), destination)
 
     mlflow.end_run()
     get_logger().info('Done')

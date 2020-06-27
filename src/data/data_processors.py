@@ -13,7 +13,7 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size: int, num_words: int = 200000, max_negatives: int = 10, batch_size: int = 128):
+    def __init__(self, dataset_size: str, num_words: int = 200000, max_negatives: int = 10, batch_size: int = 128):
         self.recipes = load_recipes(dataset_size)
         self.num_words: int = num_words
         self.tokenizer: Tokenizer = None

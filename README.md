@@ -28,6 +28,7 @@ JOB_DIR = f'gs://{BUCKET_NAME}/job'
 SCALE_TIER = 'STANDARD_1'
 MODEL_NAME = 'naive'
 DATASET_SIZE = 'small'
+EPOCHS = 10
 
 !gcloud ai-platform jobs submit training $JOB_NAME \
   --package-path ../src \
@@ -41,6 +42,7 @@ DATASET_SIZE = 'small'
   -- \
   --bucket-name $BUCKET_NAME \
   --model-name $MODEL_NAME \
-  --dataset-size $DATASET_SIZE
+  --dataset-size $DATASET_SIZE \
+  --epochs $EPOCHS
 ```
 
