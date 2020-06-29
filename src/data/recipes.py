@@ -1,12 +1,13 @@
 import json
-import pickle
 import os
+import pickle
 from pathlib import Path
+from typing import Set, Dict
 
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def load_raw_recipes():
+def load_raw_recipes() -> Dict:
     recipes = {}
     with open(os.path.join(project_dir, 'data', 'raw', 'recipes.json')) as file:
         keys = [
@@ -35,7 +36,7 @@ def load_recipes(size):
     return recipes
 
 
-def load_available_recipe_ids() -> set:
+def load_available_recipe_ids() -> Set[int]:
     recipe_ids = set()
     with open(os.path.join(project_dir, 'data', 'raw', 'recipes.json')) as file:
         recipes = json.load(file)

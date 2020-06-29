@@ -2,6 +2,7 @@ import abc
 import os
 import pickle
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
@@ -16,9 +17,9 @@ class DataProcessor(abc.ABC):
     def __init__(self, dataset_size: str, num_words: int = 200000, max_negatives: int = 10, batch_size: int = 128):
         self.recipes = load_recipes(dataset_size)
         self.num_words: int = num_words
-        self.tokenizer: Tokenizer = None
-        self.author_encoder: LabelEncoder = None
-        self.country_encoder: LabelEncoder = None
+        self.tokenizer: Optional[Tokenizer] = None
+        self.author_encoder: Optional[LabelEncoder] = None
+        self.country_encoder: Optional[LabelEncoder] = None
         self.max_negatives: int = max_negatives
         self.batch_size: int = batch_size
 
