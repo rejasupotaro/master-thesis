@@ -2,7 +2,7 @@ import abc
 import os
 import pickle
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
@@ -18,8 +18,7 @@ class DataProcessor(abc.ABC):
         self.recipes = load_recipes(dataset_size)
         self.num_words: int = num_words
         self.tokenizer: Optional[Tokenizer] = None
-        self.author_encoder: Optional[LabelEncoder] = None
-        self.country_encoder: Optional[LabelEncoder] = None
+        self.encoder: Dict[str, LabelEncoder] = {}
         self.max_negatives: int = max_negatives
         self.batch_size: int = batch_size
 
@@ -29,11 +28,11 @@ class DataProcessor(abc.ABC):
 
     @property
     def total_authors(self) -> int:
-        return len(self.author_encoder.classes_)
+        return len(self.encoder['author'].classes_)
 
     @property
     def total_countries(self) -> int:
-        return len(self.country_encoder.classes_)
+        return len(self.encoder['country'].classes_)
 
     def listwise_to_df(self, listwise_filename: str) -> pd.DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
@@ -104,11 +103,11 @@ class ConcatDataProcessor(DataProcessor):
         self.tokenizer.fit_on_texts(sentences)
         del sentences
 
-        self.author_encoder = LabelEncoder()
-        self.author_encoder.fit(list(set(df['author']) | {''}))
+        self.encoder['author'] = LabelEncoder()
+        self.encoder['author'].fit(list(set(df['author']) | {''}))
 
-        self.country_encoder = LabelEncoder()
-        self.country_encoder.fit(list(set(df['country']) | {''}))
+        self.encoder['country'] = LabelEncoder()
+        self.encoder['country'].fit(list(set(df['country']) | {''}))
 
     def process_batch(self, df: pd.DataFrame):
         df = df.copy()
@@ -119,11 +118,11 @@ class ConcatDataProcessor(DataProcessor):
         df['ingredients_word_ids'] = self.tokenizer.texts_to_sequences(df['ingredients'].tolist())
         df['description_word_ids'] = self.tokenizer.texts_to_sequences(df['description'].tolist())
 
-        df['author'] = df['author'].apply(lambda c: c if c in self.author_encoder.classes_ else '')
-        df['author'] = self.author_encoder.transform(df['author'])
+        df['author'] = df['author'].apply(lambda c: c if c in self.encoder['author'].classes_ else '')
+        df['author'] = self.encoder['author'].transform(df['author'])
 
-        df['country'] = df['country'].apply(lambda c: c if c in self.country_encoder.classes_ else '')
-        df['country'] = self.country_encoder.transform(df['country'])
+        df['country'] = df['country'].apply(lambda c: c if c in self.encoder['country'].classes_ else '')
+        df['country'] = self.encoder['country'].transform(df['country'])
 
         query_word_ids = df['query_word_ids'].tolist()
         query_word_ids = pad_sequences(query_word_ids,
@@ -188,11 +187,11 @@ class MultiInstanceDataProcessor(DataProcessor):
         self.tokenizer.fit_on_texts(sentences)
         del sentences
 
-        self.author_encoder = LabelEncoder()
-        self.author_encoder.fit(list(set(df['author']) | {''}))
+        self.encoder['author'] = LabelEncoder()
+        self.encoder['author'].fit(list(set(df['author']) | {''}))
 
-        self.country_encoder = LabelEncoder()
-        self.country_encoder.fit(list(set(df['country']) | {''}))
+        self.encoder['country'] = LabelEncoder()
+        self.encoder['country'].fit(list(set(df['country']) | {''}))
 
     def process_batch(self, df: pd.DataFrame):
         df = df.copy()
@@ -204,11 +203,11 @@ class MultiInstanceDataProcessor(DataProcessor):
                                       df['ingredients']]
         df['description_word_ids'] = self.tokenizer.texts_to_sequences(df['description'].tolist())
 
-        df['author'] = df['author'].apply(lambda c: c if c in self.author_encoder.classes_ else '')
-        df['author'] = self.author_encoder.transform(df['author'])
+        df['author'] = df['author'].apply(lambda c: c if c in self.encoder['author'].classes_ else '')
+        df['author'] = self.encoder['author'].transform(df['author'])
 
-        df['country'] = df['country'].apply(lambda c: c if c in self.country_encoder.classes_ else '')
-        df['country'] = self.country_encoder.transform(df['country'])
+        df['country'] = df['country'].apply(lambda c: c if c in self.encoder['country'].classes_ else '')
+        df['country'] = self.encoder['country'].transform(df['country'])
 
         query_word_ids = df['query_word_ids'].tolist()
         query_word_ids = pad_sequences(query_word_ids,
