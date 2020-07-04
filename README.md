@@ -25,7 +25,6 @@ BUCKET_NAME = os.getenv('BUCKET_NAME')
 REGION = os.getenv('REGION')
 JOB_NAME = f'trainer_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}'
 JOB_DIR = f'gs://{BUCKET_NAME}/job'
-SCALE_TIER = 'STANDARD_1'
 MODEL_NAME = 'naive'
 DATASET_SIZE = 'small'
 EPOCHS = 10
@@ -38,7 +37,7 @@ EPOCHS = 10
   --runtime-version 2.1 \
   --job-dir $JOB_DIR \
   --stream-logs \
-  --scale-tier $SCALE_TIER \
+  --config ../ai_platform_config.yml \
   -- \
   --bucket-name $BUCKET_NAME \
   --model-name $MODEL_NAME \
