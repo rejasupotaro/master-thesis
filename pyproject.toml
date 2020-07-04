@@ -23,11 +23,11 @@ click = "^7.1.2"
 python-dotenv = "^0.13.0"
 google-cloud-storage = "^1.29.0"
 mlflow = "^1.9.1"
-jupyter = "^1.0.0"
-jupyterlab = "^2.1.5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.4"
+jupyter = "^1.0.0"
+jupyterlab = "^2.1.5"
 
 [tool.dephell.main]
 # Run `dephell deps convert` to genereate setup.py
