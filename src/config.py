@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Type
-from src.data.data_processors import DataProcessor
+from src.data.preprocessors import DataProcessor
 from src.models.base_model import BaseModel
 
 

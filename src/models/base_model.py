@@ -3,7 +3,7 @@ import abc
 import numpy as np
 from tensorflow.keras import layers
 
-from src.data.data_processors import DataProcessor
+from src.data.preprocessors import DataProcessor
 
 
 class BaseModel(abc.ABC):

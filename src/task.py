@@ -9,7 +9,7 @@ import tensorflow as tf
 from mlflow.tracking import MlflowClient
 
 from src.config import TrainConfig, EvalConfig
-from src.data import data_processors
+from src.data import preprocessors
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
 from src.models import naive, nrmf, nrmf_concat
@@ -22,7 +22,7 @@ project_dir = Path(__file__).resolve().parents[1]
 def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
-        data_processor=data_processors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
         model=naive.Naive,
         model_filename='naive.h5',
@@ -41,7 +41,7 @@ def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfi
 def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
-        data_processor=data_processors.MultiInstanceDataProcessor(dataset_size=dataset_size),
+        data_processor=preprocessors.MultiInstanceDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
         model=nrmf.NRMF,
         model_filename='nrmf.h5',
@@ -60,7 +60,7 @@ def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig
 def nrmf_concat_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
-        data_processor=data_processors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
         model=nrmf_concat.NRMFConcat,
         model_filename='nrmf_concat.h5',

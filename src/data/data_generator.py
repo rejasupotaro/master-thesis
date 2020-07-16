@@ -2,7 +2,7 @@ import math
 
 import pandas as pd
 from tensorflow import keras
-from src.data.data_processors import DataProcessor
+from src.data.preprocessors import DataProcessor
 
 
 class DataGenerator(keras.utils.Sequence):

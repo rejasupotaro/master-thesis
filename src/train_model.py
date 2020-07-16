@@ -9,7 +9,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from src.config import TrainConfig
-from src.data import data_processors
+from src.data import preprocessors
 from src.data.data_generator import DataGenerator
 from src.losses import pairwise_losses
 from src.models import naive, nrmf, nrmf_concat
@@ -39,7 +39,6 @@ def train(config: TrainConfig):
 
     get_logger().info('Build model')
     model = config.model(data_processor).build()
-    model.summary()
 
     model.compile(
         optimizer=keras.optimizers.Adam(),
@@ -76,7 +75,7 @@ def train(config: TrainConfig):
 def naive_config() -> TrainConfig:
     return TrainConfig(
         dataset='listwise.small',
-        data_processor=data_processors.ConcatDataProcessor(dataset_size='small'),
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size='small'),
         data_processor_filename='concat_data_processor.small',
         model=naive.Naive,
         model_filename='naive.h5',
@@ -87,7 +86,7 @@ def naive_config() -> TrainConfig:
 def nrmf_config() -> TrainConfig:
     return TrainConfig(
         dataset='listwise.small',
-        data_processor=data_processors.MultiInstanceDataProcessor(dataset_size='small'),
+        data_processor=preprocessors.MultiInstanceDataProcessor(dataset_size='small'),
         data_processor_filename='multi_instance_data_processor.small',
         model=nrmf.NRMF,
         model_filename='nrmf.h5',
@@ -98,7 +97,7 @@ def nrmf_config() -> TrainConfig:
 def nrmf_concat_config() -> TrainConfig:
     return TrainConfig(
         dataset='listwise.small',
-        data_processor=data_processors.ConcatDataProcessor(dataset_size='small'),
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size='small'),
         data_processor_filename='concat_data_processor.small',
         model=nrmf_concat.NRMFConcat,
         model_filename='nrmf_concat.h5',
