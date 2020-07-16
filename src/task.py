@@ -79,10 +79,11 @@ def nrmf_concat_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, Eva
 @click.command()
 @click.option('--job-dir', type=str)
 @click.option('--bucket-name', type=str)
-@click.option('--model-name', type=str)
+@click.option('--env', type=str)
 @click.option('--dataset-size', type=str)
-@click.option('--epochs', type=int, default=1)
-def main(job_dir: str, bucket_name: str, model_name: str, dataset_size: str, epochs: int):
+@click.option('--model-name', type=str)
+@click.option('--epochs', type=int)
+def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name: str, epochs: int):
     mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
     mlflow.start_run()
     client = MlflowClient()
@@ -92,30 +93,33 @@ def main(job_dir: str, bucket_name: str, model_name: str, dataset_size: str, epo
     run_id = run.info.run_id
     get_logger().info(f'experiment_id: {experiment_id}, run_id: {run_id}')
 
-    env = json.loads(os.environ.get('TF_CONFIG', '{}'))
-    # ClusterSpec({'chief': ['cmle-training-master-e118e0f997-0:2222'], 'ps': [...], 'worker': [...]})
-    cluster_info = env.get('cluster', None)
-    cluster_spec = tf.train.ClusterSpec(cluster_info)
-    # {'type': 'worker', 'index': 3, 'cloud': 'w93a1503672d4dd09-ml'}
-    task_info = env.get('task', None)
-    job_name, task_index = task_info['type'], task_info['index']
-    get_logger().info(f'cluster_spec {cluster_spec}, job_name: {job_name}, task_index: {task_index}')
+    if env == 'cloud':
+        tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
+        # ClusterSpec({'chief': ['cmle-training-master-e118e0f997-0:2222'], 'ps': [...], 'worker': [...]})
+        cluster_info = tf_config.get('cluster', None)
+        cluster_spec = tf.train.ClusterSpec(cluster_info)
+        # {'type': 'worker', 'index': 3, 'cloud': 'w93a1503672d4dd09-ml'}
+        task_info = tf_config.get('task', None)
+        job_name, task_index = task_info['type'], task_info['index']
+        get_logger().info(f'cluster_spec {cluster_spec}, job_name: {job_name}, task_index: {task_index}')
+        get_logger().info(f'Task is lauched with arguments job-dir: {job_dir}, bucket-name: {bucket_name}')
+    else:
+        job_name = 'chief'
 
-    get_logger().info(f'Task is lauched with arguments job-dir: {job_dir}, bucket-name: {bucket_name}')
-
-    get_logger().info('Download data')
-    bucket = CloudStorage(bucket_name)
-    Path(os.path.join(project_dir, 'data', 'raw')).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(project_dir, 'data', 'processed')).mkdir(parents=True, exist_ok=True)
-    Path(os.path.join(project_dir, 'models')).mkdir(exist_ok=True)
-    bucket.download(f'data/processed/recipes.{dataset_size}.pkl',
-                    os.path.join(project_dir, 'data', 'processed', f'recipes.{dataset_size}.pkl'))
-    bucket.download(f'data/processed/listwise.{dataset_size}.train.pkl',
-                    os.path.join(project_dir, 'data', 'processed',
-                                 f'listwise.{dataset_size}.train.pkl'))
-    bucket.download(f'data/processed/listwise.{dataset_size}.test.pkl',
-                    os.path.join(project_dir, 'data', 'processed',
-                                 f'listwise.{dataset_size}.test.pkl'))
+    if env == 'cloud':
+        get_logger().info('Download data')
+        bucket = CloudStorage(bucket_name)
+        Path(os.path.join(project_dir, 'data', 'raw')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(project_dir, 'data', 'processed')).mkdir(parents=True, exist_ok=True)
+        Path(os.path.join(project_dir, 'models')).mkdir(exist_ok=True)
+        for source in [
+            f'data/processed/recipes.{dataset_size}.pkl',
+            f'data/processed/listwise.{dataset_size}.train.pkl',
+            f'data/processed/listwise.{dataset_size}.test.pkl',
+        ]:
+            destination = os.path.join(project_dir, source)
+            get_logger().info(f'Download {source} to {destination}')
+            bucket.download(source, destination)
 
     train_config, eval_config = {
         'naive': naive_config,
@@ -125,12 +129,14 @@ def main(job_dir: str, bucket_name: str, model_name: str, dataset_size: str, epo
 
     get_logger().info('Train model')
     train(train_config)
+
     get_logger().info('Evaluate model')
     evaluate(eval_config)
 
-    if job_name == 'chief':
+    mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
+    if env == 'cloud' and job_name == 'chief':
         get_logger().info('Upload results')
-        mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
+        bucket = CloudStorage(bucket_name)
         base_filepath = os.path.join(project_dir, 'logs', 'mlruns', experiment_id)
         for file in Path(base_filepath).rglob('*'):
             if file.is_file():
