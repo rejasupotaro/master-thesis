@@ -7,10 +7,11 @@ from src.data.preprocessors import DataProcessor
 
 
 class BaseModel(abc.ABC):
-    def __init__(self, data_processor: DataProcessor):
+    def __init__(self, data_processor: DataProcessor, embedding_dim: int = 32):
         self.total_words = data_processor.total_words
         self.total_authors = data_processor.total_authors
         self.total_countries = data_processor.total_countries
+        self.embedding_dim = embedding_dim
 
     @property
     @abc.abstractmethod

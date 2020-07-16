@@ -17,7 +17,6 @@ class NRMF(BaseModel):
         n_ingredients = 30
         description_len = 100
         n_gram = 3
-        embedding_dim = 128
 
         query_input = keras.Input(shape=(query_len,), name='query_word_ids')
         title_input = keras.Input(shape=(title_len,), name='title_word_ids')
@@ -26,27 +25,27 @@ class NRMF(BaseModel):
         author_input = keras.Input(shape=(1,), name='author')
         country_input = keras.Input(shape=(1,), name='country')
 
-        embedding = layers.Embedding(self.total_words, embedding_dim, mask_zero=True)
+        embedding = layers.Embedding(self.total_words, self.embedding_dim, mask_zero=True)
         query_features = embedding(query_input)
         title_features = embedding(title_input)
         ingredients_features = embedding(ingredients_input)
         description_features = embedding(description_input)
-        author_features = layers.Embedding(self.total_authors, embedding_dim)(author_input)
-        country_features = layers.Embedding(self.total_countries, embedding_dim)(country_input)
+        author_features = layers.Embedding(self.total_authors, self.embedding_dim)(author_input)
+        country_features = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
 
-        query_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(query_features)
+        query_features = layers.Conv1D(self.embedding_dim, n_gram, activation='relu')(query_features)
         query_features = layers.GlobalMaxPooling1D()(query_features)
-        title_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(title_features)
+        title_features = layers.Conv1D(self.embedding_dim, n_gram, activation='relu')(title_features)
         title_features = layers.GlobalMaxPooling1D()(title_features)
-        ingredients_features = tf.reshape(ingredients_features, [-1, ingredient_len, embedding_dim])
-        ingredients_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(ingredients_features)
+        ingredients_features = tf.reshape(ingredients_features, [-1, ingredient_len, self.embedding_dim])
+        ingredients_features = layers.Conv1D(self.embedding_dim, n_gram, activation='relu')(ingredients_features)
         ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
-        ingredients_features = tf.reshape(ingredients_features, [-1, n_ingredients, embedding_dim])
+        ingredients_features = tf.reshape(ingredients_features, [-1, n_ingredients, self.embedding_dim])
         ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
-        description_features = layers.Conv1D(embedding_dim, n_gram, activation='relu')(description_features)
+        description_features = layers.Conv1D(self.embedding_dim, n_gram, activation='relu')(description_features)
         description_features = layers.GlobalMaxPooling1D()(description_features)
-        author_features = tf.reshape(author_features, shape=(-1, embedding_dim,))
-        country_features = tf.reshape(country_features, shape=(-1, embedding_dim,))
+        author_features = tf.reshape(author_features, shape=(-1, self.embedding_dim,))
+        country_features = tf.reshape(country_features, shape=(-1, self.embedding_dim,))
 
         query_title_features = tf.multiply(query_features, title_features)
         query_ingredients_features = tf.multiply(query_features, ingredients_features)
