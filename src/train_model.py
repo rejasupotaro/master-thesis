@@ -30,12 +30,12 @@ def train(config: TrainConfig):
     data_processor = config.data_processor
 
     train_df = data_processor.listwise_to_df(f'{config.dataset}.train.pkl')
-    test_df = data_processor.listwise_to_df(f'{config.dataset}.test.pkl')
+    val_df = data_processor.listwise_to_df(f'{config.dataset}.val.pkl')
     data_processor.fit(train_df)
     with open(os.path.join(project_dir, 'models', f'{config.data_processor_filename}.pkl'), 'wb') as file:
         pickle.dump(data_processor, file)
     train_generator = DataGenerator(train_df, data_processor)
-    test_generator = DataGenerator(test_df, data_processor)
+    val_generator = DataGenerator(val_df, data_processor)
 
     get_logger().info('Build model')
     model = config.model(data_processor).build()
@@ -56,7 +56,7 @@ def train(config: TrainConfig):
     history = model.fit(
         train_generator,
         epochs=config.epochs,
-        validation_data=test_generator,
+        validation_data=val_generator,
         callbacks=callbacks,
         verbose=config.verbose,
     )

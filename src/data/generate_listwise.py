@@ -64,11 +64,11 @@ def generate(train_size: float = 0.8):
             large_dataset[key] = example
     large_dataset = list(large_dataset.values())
     get_logger().info(f'Large listwise dataset was created with {len(large_dataset)} groups')  # 904182 groups
-    train_dataset, test_dataset = train_test_split(large_dataset, train_size=train_size, shuffle=True)
+    train_dataset, val_dataset = train_test_split(large_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', 'listwise.large.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.large.test.pkl'), 'wb') as file:
-        pickle.dump(test_dataset, file)
+    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.large.val.pkl'), 'wb') as file:
+        pickle.dump(val_dataset, file)
 
     large_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(large_recipe_ids)}
     get_logger().info(f'Large recipe data was created with {len(large_recipes)} records')  # 139658 records
@@ -79,11 +79,11 @@ def generate(train_size: float = 0.8):
     top30_queries = set(top30_queries)
     medium_dataset = [example for example in large_dataset if example['query'] in top30_queries]
     get_logger().info(f'Medium listwise dataset was created with {len(medium_dataset)} groups')  # 128451 groups
-    train_dataset, test_dataset = train_test_split(medium_dataset, train_size=train_size, shuffle=True)
+    train_dataset, val_dataset = train_test_split(medium_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', 'listwise.medium.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.medium.test.pkl'), 'wb') as file:
-        pickle.dump(test_dataset, file)
+    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.medium.val.pkl'), 'wb') as file:
+        pickle.dump(val_dataset, file)
 
     medium_recipe_ids = []
     for example in medium_dataset:
@@ -94,13 +94,13 @@ def generate(train_size: float = 0.8):
         pickle.dump(medium_recipes, file)
 
     np.random.shuffle(medium_dataset)
-    small_dataset = medium_dataset[:10000]
+    small_dataset, _ = train_test_split(medium_dataset, train_size=0.03, shuffle=True)
     get_logger().info(f'Small listwise dataset was created with {len(small_dataset)} groups')  # 10000 groups
-    train_dataset, test_dataset = train_test_split(small_dataset, train_size=train_size, shuffle=True)
+    train_dataset, val_dataset = train_test_split(small_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', 'listwise.small.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.small.test.pkl'), 'wb') as file:
-        pickle.dump(test_dataset, file)
+    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.small.val.pkl'), 'wb') as file:
+        pickle.dump(val_dataset, file)
 
     small_recipe_ids = []
     for example in small_dataset:

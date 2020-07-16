@@ -112,12 +112,13 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
         Path(os.path.join(project_dir, 'data', 'raw')).mkdir(parents=True, exist_ok=True)
         Path(os.path.join(project_dir, 'data', 'processed')).mkdir(parents=True, exist_ok=True)
         Path(os.path.join(project_dir, 'models')).mkdir(exist_ok=True)
-        for source in [
+        for filepath in [
             f'data/processed/recipes.{dataset_size}.pkl',
             f'data/processed/listwise.{dataset_size}.train.pkl',
-            f'data/processed/listwise.{dataset_size}.test.pkl',
+            f'data/processed/listwise.{dataset_size}.val.pkl',
         ]:
-            destination = os.path.join(project_dir, source)
+            source = filepath
+            destination = f'{project_dir}/source'
             get_logger().info(f'Download {source} to {destination}')
             bucket.download(source, destination)
 

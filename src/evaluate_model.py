@@ -27,16 +27,16 @@ def evaluate(config: EvalConfig):
     }
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
-    get_logger().info('Load test dataset')
+    get_logger().info('Load val dataset')
     with open(os.path.join(project_dir, 'models', f'{config.data_processor_filename}.pkl'), 'rb') as file:
         data_processor = pickle.load(file)
-    with open(os.path.join(project_dir, 'data', 'processed', f'{config.dataset}.test.pkl'), 'rb') as file:
-        test_dataset = pickle.load(file)
+    with open(os.path.join(project_dir, 'data', 'processed', f'{config.dataset}.val.pkl'), 'rb') as file:
+        val_dataset = pickle.load(file)
 
     get_logger().info('Predict')
     map_scores = []
     ndcg_scores = []
-    for example in (tqdm(test_dataset) if config.verbose > 0 else test_dataset):
+    for example in (tqdm(val_dataset) if config.verbose > 0 else val_dataset):
         rows = []
         for doc in example['docs']:
             row = {

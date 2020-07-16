@@ -30,17 +30,17 @@ if __name__ == '__main__':
     project_dir = Path(__file__).resolve().parents[2]
     cloud_storage = CloudStorage()
 
-    for filename in [
-        'listwise.small.train.pkl',
-        'listwise.small.test.pkl',
-        'listwise.medium.train.pkl',
-        'listwise.medium.test.pkl',
-        'recipes.large.pkl',
-        'recipes.medium.pkl',
-        'recipes.small.pkl',
+    for filepath in [
+        'data/processed/listwise.small.train.pkl',
+        'data/processed/listwise.small.val.pkl',
+        'data/processed/listwise.medium.train.pkl',
+        'data/processed/listwise.medium.val.pkl',
+        'data/processed/recipes.large.pkl',
+        'data/processed/recipes.medium.pkl',
+        'data/processed/recipes.small.pkl',
     ]:
-        source = os.path.join(project_dir, 'data', 'processed', filename)
-        destination = f'data/processed/{filename}'
+        source = f'{project_dir}/{filepath}'
+        destination = filepath
         get_logger().info(f'Upload {source} to {destination}')
         cloud_storage.upload(source, destination)
     get_logger().info('Done')
