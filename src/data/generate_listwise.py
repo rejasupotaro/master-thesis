@@ -1,14 +1,16 @@
+import gc
 import os
-from collections import defaultdict, Counter
 import pickle
+from collections import defaultdict
 from pathlib import Path
+from typing import Dict, Iterable
 
 import numpy as np
 import pandas as pd
+import sklearn
+from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
-import gc
-import sklearn
 
 from src.data.queries import preprocess_query, get_popular_queries
 from src.data.recipes import load_raw_recipes
@@ -18,7 +20,8 @@ from src.utils.seed import set_seed
 project_dir = Path(__file__).resolve().parents[2]
 
 
-def generate_large(recipes, interactions_df, train_size, max_samples_per_query: int = 5000):
+def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
+                   max_samples_per_query: int = 1000) -> Iterable:
     available_recipe_ids = set(recipes.keys())
     # Note that the original dataset contains invalid recipe IDs (-1).
     large_dataset = {}
@@ -74,7 +77,8 @@ def generate_large(recipes, interactions_df, train_size, max_samples_per_query: 
     return large_dataset
 
 
-def generate_medium(recipes, large_dataset, target_queries, train_size):
+def generate_medium(recipes: Dict, large_dataset: Iterable, target_queries: Iterable[str],
+                    train_size: float) -> Iterable:
     medium_dataset = [example for example in large_dataset if example['query'] in target_queries]
     get_logger().info(f'Medium listwise dataset was created with {len(medium_dataset)} lists')
     train_dataset, val_dataset = train_test_split(medium_dataset, train_size=train_size, shuffle=True)
@@ -94,7 +98,7 @@ def generate_medium(recipes, large_dataset, target_queries, train_size):
     return medium_dataset
 
 
-def generate_small(recipes, medium_dataset, train_size):
+def generate_small(recipes: Dict, medium_dataset: Iterable, train_size: float):
     np.random.shuffle(medium_dataset)
     small_dataset, _ = train_test_split(medium_dataset, train_size=0.03, shuffle=True)
     get_logger().info(f'Small listwise dataset was created with {len(small_dataset)} lists')
@@ -131,21 +135,21 @@ def generate(train_size: float = 0.8):
     interactions_df = sklearn.utils.shuffle(interactions_df)
 
     interactions_df['query'] = interactions_df['query'].apply(preprocess_query)
-    popular_queries = get_popular_queries(interactions_df, top_n=100)
+    popular_queries = get_popular_queries(interactions_df, top_n=300)
     popular_queries = set(popular_queries)
 
     get_logger().info('Genereate large dataset')
-    # 879087 lists, 139892 recipes
+    # 694998 lists, 139712 recipes
     dataset = generate_large(recipes, interactions_df, train_size)
     gc.collect()
 
     get_logger().info('Genereate medium dataset')
-    # 241348 lists, 5107 recipes
+    # 214293 lists, 12024 recipes
     dataset = generate_medium(recipes, dataset, popular_queries, train_size)
     gc.collect()
 
     get_logger().info('Genereate small dataset')
-    # 7240 lists, 3161 recipes
+    # 6428 lists, 6876 recipes
     generate_small(recipes, dataset, train_size)
 
     get_logger().info('Done')

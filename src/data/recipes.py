@@ -28,7 +28,7 @@ def load_raw_recipes() -> Dict:
     return recipes
 
 
-def load_recipes(size):
+def load_recipes(size) -> Dict:
     if size not in ['small', 'medium', 'large']:
         raise KeyError
     with open(os.path.join(project_dir, 'data', 'processed', f'recipes.{size}.pkl'), 'rb') as file:

@@ -7,7 +7,7 @@ from src.models.base_model import BaseModel
 
 class NRMFConcat(BaseModel):
     @property
-    def name(self):
+    def name(self) -> str:
         return 'NRM-F-Concat'
 
     def build(self):

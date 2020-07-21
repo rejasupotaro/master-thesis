@@ -2,9 +2,9 @@ import abc
 import os
 import pickle
 from pathlib import Path
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple, List
 
-import pandas as pd
+from pandas import DataFrame
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -34,7 +34,7 @@ class DataProcessor(abc.ABC):
     def total_countries(self) -> int:
         return len(self.encoder['country'].classes_)
 
-    def listwise_to_df(self, listwise_filename: str) -> pd.DataFrame:
+    def listwise_to_df(self, listwise_filename: str) -> DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
         with open(os.path.join(project_dir, 'data', 'processed', listwise_filename), 'rb') as file:
             dataset = pickle.load(file)
@@ -59,23 +59,23 @@ class DataProcessor(abc.ABC):
                 for negative in negatives[:self.max_negatives]:
                     rows.append(positive)
                     rows.append(negative)
-        return pd.DataFrame(rows)
+        return DataFrame(rows)
 
     @abc.abstractmethod
-    def process_df(self, df: pd.DataFrame):
+    def process_df(self, df: DataFrame) -> None:
         raise NotImplementedError('Calling an abstract method.')
 
     @abc.abstractmethod
-    def fit(self, df: pd.DataFrame):
+    def fit(self, df: DataFrame) -> None:
         raise NotImplementedError('Calling an abstract method.')
 
     @abc.abstractmethod
-    def process_batch(self, df: pd.DataFrame):
+    def process_batch(self, df: DataFrame) -> Tuple[Dict, List[int]]:
         raise NotImplementedError('Calling an abstract method.')
 
 
 class ConcatDataProcessor(DataProcessor):
-    def process_df(self, df: pd.DataFrame):
+    def process_df(self, df: DataFrame) -> None:
         df['query'] = df['query'].astype(str)
         df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
         df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
@@ -87,7 +87,7 @@ class ConcatDataProcessor(DataProcessor):
         df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
         df['label'] = df['label'].astype(float)
 
-    def fit(self, df: pd.DataFrame):
+    def fit(self, df: DataFrame) -> None:
         self.process_df(df)
 
         sentences = set()
@@ -109,7 +109,7 @@ class ConcatDataProcessor(DataProcessor):
         self.encoder['country'] = LabelEncoder()
         self.encoder['country'].fit(list(set(df['country']) | {''}))
 
-    def process_batch(self, df: pd.DataFrame):
+    def process_batch(self, df: DataFrame) -> Tuple[Dict, List[int]]:
         df = df.copy()
         self.process_df(df)
 
@@ -160,7 +160,7 @@ class ConcatDataProcessor(DataProcessor):
 
 
 class MultiInstanceDataProcessor(DataProcessor):
-    def process_df(self, df: pd.DataFrame):
+    def process_df(self, df: DataFrame) -> None:
         df['query'] = df['query'].astype(str)
         df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
         df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
@@ -171,7 +171,7 @@ class MultiInstanceDataProcessor(DataProcessor):
         df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
         df['label'] = df['label'].astype(float)
 
-    def fit(self, df: pd.DataFrame):
+    def fit(self, df: DataFrame) -> None:
         self.process_df(df)
 
         sentences = set()
@@ -193,7 +193,7 @@ class MultiInstanceDataProcessor(DataProcessor):
         self.encoder['country'] = LabelEncoder()
         self.encoder['country'].fit(list(set(df['country']) | {''}))
 
-    def process_batch(self, df: pd.DataFrame):
+    def process_batch(self, df: DataFrame) -> Tuple[Dict, List[int]]:
         df = df.copy()
         self.process_df(df)
 

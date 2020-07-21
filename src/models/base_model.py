@@ -18,7 +18,7 @@ class BaseModel(abc.ABC):
     def name(self) -> str:
         raise NotImplementedError('Calling an abstract method.')
 
-    def ngram_block(self, n_gram, total_words):
+    def ngram_block(self, n_gram: int, total_words: int):
         def wrapped(inputs):
             layer = layers.Conv1D(1, n_gram, use_bias=False, trainable=False)
             x = layers.Reshape((-1, 1))(inputs)

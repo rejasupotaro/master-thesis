@@ -7,7 +7,7 @@ from src.models.base_model import BaseModel
 
 class NRMF(BaseModel):
     @property
-    def name(self):
+    def name(self) -> str:
         return 'NRM-F'
 
     def build(self):

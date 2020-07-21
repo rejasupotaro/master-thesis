@@ -5,8 +5,8 @@ from pathlib import Path
 
 import mlflow
 import numpy as np
-import pandas as pd
 import tensorflow as tf
+from pandas import DataFrame
 from tensorflow import keras
 from tqdm import tqdm
 
@@ -45,7 +45,7 @@ def evaluate(config: EvalConfig):
                 'label': doc['label']
             }
             rows.append(row)
-        df = pd.DataFrame(rows)
+        df = DataFrame(rows)
         x, y = data_processor.process_batch(df)
         dataset = tf.data.Dataset.from_tensor_slices((x, {'label': y})).batch(128)
         preds = model.predict(dataset, verbose=0)
