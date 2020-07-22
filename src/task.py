@@ -31,7 +31,7 @@ def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfi
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_filename='naive.h5',
+        model_filename='naive',
         verbose=0,
     )
     return train_config, eval_config
@@ -49,13 +49,13 @@ def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
-        model_filename='nrmf.h5',
+        model_filename='nrmf',
         verbose=0,
     )
     return train_config, eval_config
 
 
-def nrmf_concat_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def nrmf_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
@@ -67,7 +67,7 @@ def nrmf_concat_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, Eva
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_filename='nrmf_concat.h5',
+        model_filename='nrmf_simple',
         verbose=0,
     )
     return train_config, eval_config
@@ -122,7 +122,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     train_config, eval_config = {
         'naive': naive_config,
         'nrmf': nrmf_config,
-        'nrmf_concat': nrmf_concat_config,
+        'nrmf_simple': nrmf_simple_config,
     }[model_name](dataset_size, epochs)
 
     get_logger().info('Train model')

@@ -1,20 +1,17 @@
 import os
 import pickle
-from dataclasses import asdict
 from pathlib import Path
 
 import mlflow
 import numpy as np
 import tensorflow as tf
 from pandas import DataFrame
-from tensorflow import keras
-from tqdm import tqdm
-
 from src.config import EvalConfig
 from src.losses import pairwise_losses
 from src.metrics import metrics
-from src.utils.logger import create_logger, get_logger
-from src.utils.seed import set_seed
+from src.utils.logger import get_logger
+from tensorflow import keras
+from tqdm import tqdm
 
 project_dir = Path(__file__).resolve().parents[1]
 
@@ -60,43 +57,3 @@ def evaluate(config: EvalConfig):
     get_logger().info(f'MAP: {map_score}, NDCG: {ndcg_score}')
     mlflow.log_metric('MAP', map_score)
     mlflow.log_metric('NDCG', ndcg_score)
-
-
-def naive_config() -> EvalConfig:
-    return EvalConfig(
-        dataset='listwise.small',
-        data_processor_filename='concat_data_processor.small',
-        model_filename='naive',
-    )
-
-
-def nrmf_config() -> EvalConfig:
-    return EvalConfig(
-        dataset='listwise.small',
-        data_processor_filename='multi_instance_data_processor.small',
-        model_filename='nrmf',
-    )
-
-
-def nrmf_concat_config() -> EvalConfig:
-    return EvalConfig(
-        dataset='listwise.small',
-        data_processor_filename='concat_data_processor.small',
-        model_filename='nrmf_simple',
-    )
-
-
-if __name__ == '__main__':
-    create_logger()
-    set_seed()
-    mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
-    mlflow.start_run()
-
-    config = naive_config()
-    # config = nrmf_config()
-    # config = nrmf_concat_config()
-    mlflow.log_params(asdict(config))
-    evaluate(config)
-
-    mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
-    mlflow.end_run()
