@@ -12,7 +12,7 @@ from src.config import TrainConfig, EvalConfig
 from src.data import preprocessors
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
-from src.models import naive, nrmf
+from src.models import naive, nrmf, fm
 from src.train_model import train
 from src.utils.logger import create_logger, get_logger
 
@@ -31,7 +31,7 @@ def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfi
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_filename='naive',
+        model_name='naive',
         verbose=0,
     )
     return train_config, eval_config
@@ -49,7 +49,7 @@ def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
-        model_filename='nrmf',
+        model_name='nrmf',
         verbose=0,
     )
     return train_config, eval_config
@@ -67,7 +67,43 @@ def nrmf_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, Eva
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_filename='nrmf_simple',
+        model_name='nrmf_simple',
+        verbose=0,
+    )
+    return train_config, eval_config
+
+
+def fm_query_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=fm.FMQuery,
+        epochs=epochs,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_name='fm_query',
+        verbose=0,
+    )
+    return train_config, eval_config
+
+
+def fm_all_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=fm.FMAll,
+        epochs=epochs,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_name='fm_all',
         verbose=0,
     )
     return train_config, eval_config
@@ -123,6 +159,8 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
         'naive': naive_config,
         'nrmf': nrmf_config,
         'nrmf_simple': nrmf_simple_config,
+        'fm_query': fm_query_config,
+        'fm_all': fm_all_config,
     }[model_name](dataset_size, epochs)
 
     get_logger().info('Train model')

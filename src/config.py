@@ -19,5 +19,5 @@ class TrainConfig:
 class EvalConfig:
     dataset: str
     data_processor_filename: str
-    model_filename: str
+    model_name: str
     verbose: int = 1

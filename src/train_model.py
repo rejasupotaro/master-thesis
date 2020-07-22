@@ -28,7 +28,7 @@ def train(config: TrainConfig):
     train_df = data_processor.listwise_to_df(f'{config.dataset}.train.pkl')
     val_df = data_processor.listwise_to_df(f'{config.dataset}.val.pkl')
     data_processor.fit(train_df)
-    with open(os.path.join(project_dir, 'models', f'{config.data_processor_filename}.pkl'), 'wb') as file:
+    with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'wb') as file:
         pickle.dump(data_processor, file)
     train_generator = DataGenerator(train_df, data_processor)
     val_generator = DataGenerator(val_df, data_processor)
@@ -43,8 +43,7 @@ def train(config: TrainConfig):
     )
 
     get_logger().info('Train model')
-    log_dir = os.path.join(project_dir, 'logs', 'fit',
-                           f'{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}')
+    log_dir = f'{project_dir}/logs/fit/{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}'
     callbacks = [
         tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
         tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
@@ -63,6 +62,6 @@ def train(config: TrainConfig):
             mlflow.log_metric(metric, value, step=i)
 
     get_logger().info('Save model')
-    model.save(os.path.join(project_dir, 'models', model.name))
+    model.save(f'{project_dir}/models/{model.name}.h5')
 
     get_logger().info('Done')

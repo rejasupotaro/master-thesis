@@ -18,7 +18,7 @@ project_dir = Path(__file__).resolve().parents[1]
 
 def evaluate(config: EvalConfig):
     get_logger().info('Load model')
-    filepath = os.path.join(project_dir, 'models', config.model_filename)
+    filepath = f'{project_dir}/models/{config.model_name}.h5'
     custom_objects = {
         'cross_entropy_loss': pairwise_losses.cross_entropy_loss
     }
