@@ -8,7 +8,7 @@ from src.models.base_model import BaseModel
 class Naive(BaseModel):
     @property
     def name(self) -> str:
-        return 'Naive'
+        return 'naive'
 
     def build(self):
         query_len = 6
@@ -22,36 +22,25 @@ class Naive(BaseModel):
         description_input = keras.Input(shape=(description_len,), name='description_word_ids')
         author_input = keras.Input(shape=(1,), name='author')
         country_input = keras.Input(shape=(1,), name='country')
+        inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
-        query_features = embedding(query_input)
-        title_features = embedding(title_input)
-        ingredients_features = embedding(ingredients_input)
-        description_features = embedding(description_input)
-        author_features = layers.Embedding(self.total_authors, self.embedding_dim)(author_input)
-        country_features = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
+        query = embedding(query_input)
+        title = embedding(title_input)
+        ingredients = embedding(ingredients_input)
+        description = embedding(description_input)
+        author = layers.Embedding(self.total_authors, self.embedding_dim)(author_input)
+        country = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
 
-        query_features = layers.GlobalMaxPooling1D()(query_features)
-        title_features = layers.GlobalMaxPooling1D()(title_features)
-        ingredients_features = layers.GlobalMaxPooling1D()(ingredients_features)
-        description_features = layers.GlobalMaxPooling1D()(description_features)
-        author_features = tf.reshape(author_features, shape=(-1, self.embedding_dim,))
-        country_features = tf.reshape(country_features, shape=(-1, self.embedding_dim,))
+        query = layers.GlobalMaxPooling1D()(query)
+        title = layers.GlobalMaxPooling1D()(title)
+        ingredients = layers.GlobalMaxPooling1D()(ingredients)
+        description = layers.GlobalMaxPooling1D()(description)
+        author = tf.reshape(author, shape=(-1, self.embedding_dim,))
+        country = tf.reshape(country, shape=(-1, self.embedding_dim,))
 
-        x = layers.concatenate([
-            query_features,
-            title_features,
-            ingredients_features,
-            description_features,
-            author_features,
-            country_features
-        ])
+        x = layers.concatenate([query, title, ingredients, description, author, country])
         x = layers.Dense(32, activation='relu')(x)
         output = layers.Dense(1, activation='sigmoid', name='label')(x)
 
-        return keras.Model(
-            inputs=[query_input, title_input, ingredients_input, description_input, author_input, country_input],
-            outputs=[output],
-            name=self.name
-        )
-
+        return keras.Model(inputs=inputs, outputs=output, name=self.name)

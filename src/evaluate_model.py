@@ -66,7 +66,7 @@ def naive_config() -> EvalConfig:
     return EvalConfig(
         dataset='listwise.small',
         data_processor_filename='concat_data_processor.small',
-        model_filename='naive.h5',
+        model_filename='naive',
     )
 
 
@@ -74,7 +74,7 @@ def nrmf_config() -> EvalConfig:
     return EvalConfig(
         dataset='listwise.small',
         data_processor_filename='multi_instance_data_processor.small',
-        model_filename='nrmf.h5',
+        model_filename='nrmf',
     )
 
 
@@ -82,7 +82,7 @@ def nrmf_concat_config() -> EvalConfig:
     return EvalConfig(
         dataset='listwise.small',
         data_processor_filename='concat_data_processor.small',
-        model_filename='nrmf_concat.h5',
+        model_filename='nrmf_simple',
     )
 
 

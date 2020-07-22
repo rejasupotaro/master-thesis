@@ -12,7 +12,7 @@ from src.config import TrainConfig
 from src.data import preprocessors
 from src.data.data_generator import DataGenerator
 from src.losses import pairwise_losses
-from src.models import naive, nrmf, nrmf_concat
+from src.models import naive, nrmf
 from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
@@ -67,7 +67,7 @@ def train(config: TrainConfig):
             mlflow.log_metric(metric, value, step=i)
 
     get_logger().info('Save model')
-    model.save(os.path.join(project_dir, 'models', config.model_filename))
+    model.save(os.path.join(project_dir, 'models', model.name))
 
     get_logger().info('Done')
 
@@ -99,7 +99,7 @@ def nrmf_concat_config() -> TrainConfig:
         dataset='listwise.small',
         data_processor=preprocessors.ConcatDataProcessor(dataset_size='small'),
         data_processor_filename='concat_data_processor.small',
-        model=nrmf_concat.NRMFConcat,
+        model=nrmf.NRMFSimple,
         model_filename='nrmf_concat.h5',
         epochs=3,
     )

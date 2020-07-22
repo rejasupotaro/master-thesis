@@ -11,7 +11,6 @@ class TrainConfig:
     data_processor: DataProcessor
     data_processor_filename: str
     model: Type[BaseModel]
-    model_filename: str
     epochs: int
     verbose: int = 1
 

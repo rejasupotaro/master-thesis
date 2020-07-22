@@ -7,10 +7,10 @@ from tensorflow.keras import layers
 from src.models.base_model import BaseModel
 
 
-class FM(BaseModel):
+class FMQuery(BaseModel):
     @property
     def name(self) -> str:
-        return 'FM'
+        return 'fm_query'
 
     def build(self):
         query_len = 6
@@ -18,12 +18,6 @@ class FM(BaseModel):
         ingredients_len = 300
         description_len = 100
 
-        text_input_size = {
-            'query': 6,
-            'title': 20,
-            'ingredients': 300,
-            'description': 100,
-        }
         categorical_input_size = {
             'author': self.total_authors,
             'country': self.total_countries,
@@ -33,11 +27,77 @@ class FM(BaseModel):
         title_input = keras.Input(shape=(title_len,), name='title_word_ids')
         ingredients_input = keras.Input(shape=(ingredients_len,), name='ingredients_word_ids')
         description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        text_inputs = [query_input, title_input, ingredients_input, description_input]
-
         author_input = keras.Input(shape=(1,), name='author')
         country_input = keras.Input(shape=(1,), name='country')
-        categorical_inputs = [author_input, country_input]
+        inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
+
+        embedding = layers.Embedding(self.total_words, self.embedding_dim)
+        query = layers.GlobalMaxPooling1D()(embedding(query_input))
+        title = layers.GlobalMaxPooling1D()(embedding(title_input))
+        ingredients = layers.GlobalMaxPooling1D()(embedding(ingredients_input))
+        description = layers.GlobalMaxPooling1D()(embedding(description_input))
+
+        embedding = layers.Embedding(categorical_input_size['author'], self.embedding_dim)
+        author = embedding(author_input)
+        author = tf.reshape(author, shape=(-1, self.embedding_dim,))
+        embedding = layers.Embedding(categorical_input_size['country'], self.embedding_dim)
+        country = embedding(country_input)
+        country = tf.reshape(country, shape=(-1, self.embedding_dim,))
+
+        query_title = layers.Dot(axes=1)([query, title])
+        query_ingredients = layers.Dot(axes=1)([query, ingredients])
+        query_description = layers.Dot(axes=1)([query, description])
+        query_author = layers.Dot(axes=1)([query, author])
+        query_country = layers.Dot(axes=1)([query, country])
+        interactions = layers.Add()([query_title, query_ingredients, query_description, query_author, query_country])
+
+        embedding = layers.Embedding(self.total_words, 1)
+        query = layers.GlobalMaxPooling1D()(embedding(query_input))
+        title = layers.GlobalMaxPooling1D()(embedding(title_input))
+        ingredients = layers.GlobalMaxPooling1D()(embedding(ingredients_input))
+        description = layers.GlobalMaxPooling1D()(embedding(description_input))
+
+        embedding = layers.Embedding(categorical_input_size['author'], 1)
+        author = embedding(author_input)
+        author = tf.reshape(author, shape=(-1, 1))
+        embedding = layers.Embedding(categorical_input_size['country'], 1)
+        country = embedding(country_input)
+        country = tf.reshape(country, shape=(-1, 1))
+        biases = layers.Add()([query, title, ingredients, description, author, country])
+
+        bias_0 = tf.Variable(0.)
+
+        output = layers.Activation('sigmoid', name='label')(bias_0 + biases + interactions)
+        return tf.keras.Model(inputs=inputs, outputs=output, name=self.name)
+
+
+class FMAll(BaseModel):
+    @property
+    def name(self) -> str:
+        return 'fm_all'
+
+    def build(self):
+        query_len = 6
+        title_len = 20
+        ingredients_len = 300
+        description_len = 100
+
+        categorical_input_size = {
+            'author': self.total_authors,
+            'country': self.total_countries,
+        }
+
+        text_inputs = [
+            keras.Input(shape=(query_len,), name='query_word_ids'),
+            keras.Input(shape=(title_len,), name='title_word_ids'),
+            keras.Input(shape=(ingredients_len,), name='ingredients_word_ids'),
+            keras.Input(shape=(description_len,), name='description_word_ids'),
+        ]
+
+        categorical_inputs = [
+            keras.Input(shape=(1,), name='author'),
+            keras.Input(shape=(1,), name='country'),
+        ]
 
         inputs = text_inputs + categorical_inputs
 
@@ -60,7 +120,7 @@ class FM(BaseModel):
         interactions = layers.Add()(interactions)
 
         biases = []
-        for name, feature in zip(text_input_size, text_inputs):
+        for feature in text_inputs:
             feature = layers.Embedding(self.total_words, 1)(feature)
             feature = layers.GlobalMaxPooling1D()(feature)
             biases.append(feature)
@@ -70,5 +130,7 @@ class FM(BaseModel):
             biases.append(feature)
         biases = layers.Add()(biases)
 
-        output = layers.Activation('sigmoid', name='label')(interactions + biases)
-        return tf.keras.Model(inputs=inputs, outputs=output)
+        bias_0 = tf.Variable(0.)
+
+        output = layers.Activation('sigmoid', name='label')(bias_0 + biases + interactions)
+        return tf.keras.Model(inputs=inputs, outputs=output, name=self.name)
