@@ -13,6 +13,14 @@ python-dateutil = "*"
 python-editor = ">=0.3"
 
 [[package]]
+category = "main"
+description = "Approximate Nearest Neighbors in C++/Python optimized for memory usage and loading/saving to disk."
+name = "annoy"
+optional = false
+python-versions = "*"
+version = "1.16.3"
+
+[[package]]
 category = "dev"
 description = "Disable App Nap on OS X 10.9"
 marker = "sys_platform == \"darwin\" or platform_system == \"Darwin\" or python_version >= \"3.3\" and sys_platform == \"darwin\""
@@ -1598,12 +1606,15 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "152a3a5b81ae391e816c103cad163e2861fa8489ae3da48a6678456a5e51dc23"
+content-hash = "fced7bce0ce09e79a09b39d96b766f19a2db630160e57adb0346920981ae2522"
 python-versions = "3.7.7"
 
 [metadata.files]
 alembic = [
     {file = "alembic-1.4.2.tar.gz", hash = "sha256:035ab00497217628bf5d0be82d664d8713ab13d37b630084da8e1f98facf4dbf"},
+]
+annoy = [
+    {file = "annoy-1.16.3.tar.gz", hash = "sha256:fe2779664bd8846f2d67191a7e6010b8df890ac4586336748fd0697f31654379"},
 ]
 appnope = [
     {file = "appnope-0.1.0-py2.py3-none-any.whl", hash = "sha256:5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0"},

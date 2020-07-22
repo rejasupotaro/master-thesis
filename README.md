@@ -1,6 +1,6 @@
 # Relevance Estimation for Multiple-Field Documents
 
-A short description of the project.
+WIP
 
 ## Setup
 
