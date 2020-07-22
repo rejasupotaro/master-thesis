@@ -31,14 +31,14 @@ def load_raw_recipes() -> Dict:
 def load_recipes(size) -> Dict:
     if size not in ['small', 'medium', 'large']:
         raise KeyError
-    with open(os.path.join(project_dir, 'data', 'processed', f'recipes.{size}.pkl'), 'rb') as file:
+    with open(f'{project_dir}/data/processed/recipes.{size}.pkl', 'rb') as file:
         recipes = pickle.load(file)
     return recipes
 
 
 def load_available_recipe_ids() -> Set[int]:
     recipe_ids = set()
-    with open(os.path.join(project_dir, 'data', 'raw', 'recipes.json')) as file:
+    with open(f'{project_dir}/data/raw/recipes.json') as file:
         recipes = json.load(file)
         for recipe in recipes:
             recipe_ids.add(recipe['recipe_id'])

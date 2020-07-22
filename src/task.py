@@ -151,7 +151,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
             f'data/processed/listwise.{dataset_size}.val.pkl',
         ]:
             source = filepath
-            destination = f'{project_dir}/source'
+            destination = f'{project_dir}/{source}'
             get_logger().info(f'Download {source} to {destination}')
             bucket.download(source, destination)
 
