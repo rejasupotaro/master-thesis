@@ -12,7 +12,7 @@ from src.config import TrainConfig, EvalConfig
 from src.data import preprocessors
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
-from src.models import naive, nrmf, fm
+from src.models import naive, nrmf, fm, autoint
 from src.train_model import train
 from src.utils.logger import create_logger, get_logger
 
@@ -109,6 +109,24 @@ def fm_all_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConf
     return train_config, eval_config
 
 
+def autoint_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=autoint.AutoInt,
+        epochs=epochs,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_name='autoint',
+        verbose=0,
+    )
+    return train_config, eval_config
+
+
 @click.command()
 @click.option('--job-dir', type=str)
 @click.option('--bucket-name', type=str)
@@ -161,6 +179,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
         'nrmf_simple': nrmf_simple_config,
         'fm_query': fm_query_config,
         'fm_all': fm_all_config,
+        'autoint': autoint_config,
     }[model_name](dataset_size, epochs)
 
     get_logger().info('Train model')
