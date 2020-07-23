@@ -5,10 +5,10 @@ from tensorflow.keras import layers
 from src.models.base_model import BaseModel
 
 
-class AutoInt(BaseModel):
+class AutoIntSimple(BaseModel):
     @property
     def name(self) -> str:
-        return 'autoint'
+        return 'autoint_simple'
 
     def build(self):
         query_len = 6

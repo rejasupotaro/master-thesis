@@ -55,19 +55,37 @@ def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig
     return train_config, eval_config
 
 
-def nrmf_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def nrmf_simple_query_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=nrmf.NRMFSimple,
+        model=nrmf.NRMFSimpleQuery,
         epochs=epochs,
         verbose=2,
     )
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='nrmf_simple',
+        model_name='nrmf_simple_query',
+        verbose=0,
+    )
+    return train_config, eval_config
+
+
+def nrmf_simple_all_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=nrmf.NRMFSimpleAll,
+        epochs=epochs,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_name='nrmf_simple_all',
         verbose=0,
     )
     return train_config, eval_config
@@ -109,19 +127,19 @@ def fm_all_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConf
     return train_config, eval_config
 
 
-def autoint_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def autoint_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=autoint.AutoInt,
+        model=autoint.AutoIntSimple,
         epochs=epochs,
         verbose=2,
     )
     eval_config = EvalConfig(
         dataset=f'listwise.{dataset_size}',
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='autoint',
+        model_name='autoint_simple',
         verbose=0,
     )
     return train_config, eval_config
@@ -176,10 +194,11 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     train_config, eval_config = {
         'naive': naive_config,
         'nrmf': nrmf_config,
-        'nrmf_simple': nrmf_simple_config,
+        'nrmf_simple_query': nrmf_simple_query_config,
+        'nrmf_simple_all': nrmf_simple_all_config,
         'fm_query': fm_query_config,
         'fm_all': fm_all_config,
-        'autoint': autoint_config,
+        'autoint_simple': autoint_simple_config,
     }[model_name](dataset_size, epochs)
 
     get_logger().info('Train model')
