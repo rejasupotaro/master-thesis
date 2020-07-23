@@ -1,4 +1,3 @@
-import os
 import pickle
 from pathlib import Path
 
@@ -25,9 +24,9 @@ def evaluate(config: EvalConfig):
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
     get_logger().info('Load val dataset')
-    with open(os.path.join(project_dir, 'models', f'{config.data_processor_filename}.pkl'), 'rb') as file:
+    with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'rb') as file:
         data_processor = pickle.load(file)
-    with open(os.path.join(project_dir, 'data', 'processed', f'{config.dataset}.val.pkl'), 'rb') as file:
+    with open(f'{project_dir}/data/processed/{config.dataset}.val.pkl', 'rb') as file:
         val_dataset = pickle.load(file)
 
     get_logger().info('Predict')
@@ -52,8 +51,8 @@ def evaluate(config: EvalConfig):
         map_scores.append(metrics.mean_average_precision(y_true, y_pred))
         ndcg_scores.append(metrics.normalized_discount_cumulative_gain(y_true, y_pred))
 
-    map_score = np.mean(map_scores)
-    ndcg_score = np.mean(ndcg_scores)
+    map_score = round(np.mean(map_scores), 4)
+    ndcg_score = round(np.mean(ndcg_scores), 4)
     get_logger().info(f'MAP: {map_score}, NDCG: {ndcg_score}')
     mlflow.log_metric('MAP', map_score)
     mlflow.log_metric('NDCG', ndcg_score)
