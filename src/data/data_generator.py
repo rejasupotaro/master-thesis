@@ -8,7 +8,7 @@ from src.data.preprocessors import DataProcessor
 
 
 class DataGenerator(keras.utils.Sequence):
-    def __init__(self, df: DataFrame, processor: DataProcessor, batch_size: int = 128):
+    def __init__(self, df: DataFrame, processor: DataProcessor, batch_size: int = 256):
         self.df = df
         self.processor = processor
         self.batch_size = batch_size

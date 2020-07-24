@@ -15,24 +15,10 @@ from tqdm import tqdm
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def evaluate(config: EvalConfig):
-    get_logger().info('Load model')
-    filepath = f'{project_dir}/models/{config.model_name}.h5'
-    custom_objects = {
-        'cross_entropy_loss': pairwise_losses.cross_entropy_loss
-    }
-    model = keras.models.load_model(filepath, custom_objects=custom_objects)
-
-    get_logger().info('Load val dataset')
-    with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'rb') as file:
-        data_processor = pickle.load(file)
-    with open(f'{project_dir}/data/processed/{config.dataset}.val.pkl', 'rb') as file:
-        val_dataset = pickle.load(file)
-
-    get_logger().info('Predict')
+def predict(model, dataset, data_processor, verbose=1):
     map_scores = []
     ndcg_scores = []
-    for example in (tqdm(val_dataset) if config.verbose > 0 else val_dataset):
+    for example in (tqdm(dataset) if verbose > 0 else dataset):
         rows = []
         for doc in example['docs']:
             row = {
@@ -53,6 +39,25 @@ def evaluate(config: EvalConfig):
 
     map_score = round(np.mean(map_scores), 4)
     ndcg_score = round(np.mean(ndcg_scores), 4)
+    return map_score, ndcg_score
+
+
+def evaluate(config: EvalConfig):
+    get_logger().info('Load model')
+    filepath = f'{project_dir}/models/{config.model_name}.h5'
+    custom_objects = {
+        'cross_entropy_loss': pairwise_losses.cross_entropy_loss
+    }
+    model = keras.models.load_model(filepath, custom_objects=custom_objects)
+
+    get_logger().info('Load val dataset')
+    with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'rb') as file:
+        data_processor = pickle.load(file)
+    with open(f'{project_dir}/data/processed/{config.dataset}.val.pkl', 'rb') as file:
+        val_dataset = pickle.load(file)
+
+    get_logger().info('Predict')
+    map_score, ndcg_score = predict(model, val_dataset, data_processor, config.verbose)
     get_logger().info(f'MAP: {map_score}, NDCG: {ndcg_score}')
     mlflow.log_metric('MAP', map_score)
     mlflow.log_metric('NDCG', ndcg_score)
