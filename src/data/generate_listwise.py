@@ -21,7 +21,7 @@ project_dir = Path(__file__).resolve().parents[2]
 
 
 def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
-                   max_samples_per_query: int = 1000) -> Iterable:
+                   max_samples_per_query: int = 100) -> Iterable:
     available_recipe_ids = set(recipes.keys())
     # Note that the original dataset contains invalid recipe IDs (-1).
     large_dataset = {}
@@ -135,21 +135,21 @@ def generate(train_size: float = 0.8):
     interactions_df = sklearn.utils.shuffle(interactions_df)
 
     interactions_df['query'] = interactions_df['query'].apply(preprocess_query)
-    popular_queries = get_popular_queries(interactions_df, top_n=300)
+    popular_queries = get_popular_queries(interactions_df, top_n=3000)
     popular_queries = set(popular_queries)
 
     get_logger().info('Genereate large dataset')
-    # 694998 lists, 139712 recipes
+    # 351495 lists, 136764 recipes
     dataset = generate_large(recipes, interactions_df, train_size)
     gc.collect()
 
     get_logger().info('Genereate medium dataset')
-    # 214293 lists, 12024 recipes
+    # 191144 lists, 55117 recipes
     dataset = generate_medium(recipes, dataset, popular_queries, train_size)
     gc.collect()
 
     get_logger().info('Genereate small dataset')
-    # 6428 lists, 6876 recipes
+    # 5734 lists, 24713 recipes
     generate_small(recipes, dataset, train_size)
 
     get_logger().info('Done')
