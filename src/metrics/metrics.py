@@ -22,7 +22,7 @@ def mean_average_precision(y_true: List[int], y_pred: List[float], threshold: fl
         return result / pos
 
 
-def discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 10, threshold: float = 0.5):
+def discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 20, threshold: float = 0.5):
     coupled_pair = sort_and_couple(y_true, y_pred)
     result = 0.
     for i, (label, score) in enumerate(coupled_pair):
@@ -33,7 +33,7 @@ def discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 10
     return result
 
 
-def normalized_discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 10, threshold: float = 0.5):
+def normalized_discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 20, threshold: float = 0.5):
     idcg_val = discount_cumulative_gain(y_true, y_true, k, threshold)
     dcg_val = discount_cumulative_gain(y_true, y_pred, k, threshold)
     return dcg_val / idcg_val if idcg_val != 0 else 0
