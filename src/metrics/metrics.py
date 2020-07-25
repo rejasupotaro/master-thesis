@@ -29,7 +29,7 @@ def discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 10
         if i >= k:
             break
         if label > threshold:
-            result += (np.power(2., label) - 1.) / np.log(2. + i)
+            result += (np.power(2., label) - 1.) / np.log2(2. + i)
     return result
 
 
