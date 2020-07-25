@@ -21,7 +21,7 @@ project_dir = Path(__file__).resolve().parents[2]
 
 
 def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
-                   max_samples_per_query: int = 100) -> Iterable:
+                   max_positives_per_query: int = 100) -> Iterable:
     available_recipe_ids = set(recipes.keys())
     # Note that the original dataset contains invalid recipe IDs (-1).
     large_dataset = {}
@@ -33,7 +33,7 @@ def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
         query = ''
         for index, row in group.iterrows():
             query = row['query']
-            if counter[query] > max_samples_per_query:
+            if counter[query] > max_positives_per_query:
                 break
             example['query'] = query
             positive_doc_id = row['recipe_id']
@@ -57,7 +57,7 @@ def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
             if example['docs'][-1]['label'] == 0:
                 example['docs'].pop()
         counter[query] += 1
-        if counter[query] > max_samples_per_query:
+        if counter[query] > max_positives_per_query:
             continue
         if len(example['docs']) > 2:
             large_dataset[key] = example
