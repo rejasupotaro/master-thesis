@@ -1,11 +1,14 @@
 import json
 import os
+import sys
 from pathlib import Path
+from time import time
 from typing import Tuple
 
 import click
 import mlflow
 import tensorflow as tf
+from loguru import logger
 from mlflow.tracking import MlflowClient
 
 from src.config import TrainConfig, EvalConfig
@@ -14,7 +17,6 @@ from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
 from src.models import naive, nrmf, fm, autoint
 from src.train_model import train
-from src.utils.logger import create_logger, get_logger
 
 project_dir = Path(__file__).resolve().parents[1]
 
@@ -153,6 +155,9 @@ def autoint_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, 
 @click.option('--model-name', type=str)
 @click.option('--epochs', type=int)
 def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name: str, epochs: int):
+    logger.add(sys.stdout, format='{time} {level} {message}')
+    log_filepath = f'{project_dir}/logs/{int(time())}.log'
+    logger.add(log_filepath)
     mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
     mlflow.start_run()
     client = MlflowClient()
@@ -160,7 +165,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     experiment_id = experiments[0].experiment_id
     run = client.create_run(experiment_id)  # returns mlflow.entities.Run
     run_id = run.info.run_id
-    get_logger().info(f'experiment_id: {experiment_id}, run_id: {run_id}')
+    logger.info(f'experiment_id: {experiment_id}, run_id: {run_id}')
 
     if env == 'cloud':
         tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
@@ -170,13 +175,13 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
         # {'type': 'worker', 'index': 3, 'cloud': 'w93a1503672d4dd09-ml'}
         task_info = tf_config.get('task', None)
         job_name, task_index = task_info['type'], task_info['index']
-        get_logger().info(f'cluster_spec {cluster_spec}, job_name: {job_name}, task_index: {task_index}')
-        get_logger().info(f'Task is lauched with arguments job-dir: {job_dir}, bucket-name: {bucket_name}')
+        logger.info(f'cluster_spec {cluster_spec}, job_name: {job_name}, task_index: {task_index}')
+        logger.info(f'Task is lauched with arguments job-dir: {job_dir}, bucket-name: {bucket_name}')
     else:
         job_name = 'chief'
 
     if env == 'cloud':
-        get_logger().info('Download data')
+        logger.info('Download data')
         bucket = CloudStorage(bucket_name)
         Path(os.path.join(project_dir, 'data', 'raw')).mkdir(parents=True, exist_ok=True)
         Path(os.path.join(project_dir, 'data', 'processed')).mkdir(parents=True, exist_ok=True)
@@ -188,7 +193,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
         ]:
             source = filepath
             destination = f'{project_dir}/{source}'
-            get_logger().info(f'Download {source} to {destination}')
+            logger.info(f'Download {source} to {destination}')
             bucket.download(source, destination)
 
     train_config, eval_config = {
@@ -201,15 +206,15 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
         'autoint_simple': autoint_simple_config,
     }[model_name](dataset_size, epochs)
 
-    get_logger().info('Train model')
+    logger.info('Train model')
     train(train_config)
 
-    get_logger().info('Evaluate model')
+    logger.info('Evaluate model')
     evaluate(eval_config)
 
-    mlflow.log_artifact(os.path.join(project_dir, 'logs', '1.log'))
+    mlflow.log_artifact(log_filepath)
     if env == 'cloud' and job_name == 'chief':
-        get_logger().info('Upload results')
+        logger.info('Upload results')
         bucket = CloudStorage(bucket_name)
         base_filepath = os.path.join(project_dir, 'logs', 'mlruns', experiment_id)
         for file in Path(base_filepath).rglob('*'):
@@ -219,10 +224,8 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
                 bucket.upload(str(file), destination)
 
     mlflow.end_run()
-    get_logger().info('Done')
+    logger.info('Done')
 
 
 if __name__ == '__main__':
-    create_logger()
-    get_logger()
     main()

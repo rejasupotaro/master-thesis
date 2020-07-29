@@ -1,9 +1,10 @@
 import itertools
 
 import tensorflow as tf
-from src.models.base_model import BaseModel
 from tensorflow import keras
 from tensorflow.keras import layers
+
+from src.models.base_model import BaseModel
 
 
 class NRMF(BaseModel):

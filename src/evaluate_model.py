@@ -4,13 +4,14 @@ from pathlib import Path
 import mlflow
 import numpy as np
 import tensorflow as tf
+from loguru import logger
 from pandas import DataFrame
+from tensorflow import keras
+from tqdm import tqdm
+
 from src.config import EvalConfig
 from src.losses import pairwise_losses
 from src.metrics import metrics
-from src.utils.logger import get_logger
-from tensorflow import keras
-from tqdm import tqdm
 
 project_dir = Path(__file__).resolve().parents[1]
 
@@ -43,21 +44,21 @@ def predict(model, dataset, data_processor, verbose=1):
 
 
 def evaluate(config: EvalConfig):
-    get_logger().info('Load model')
+    logger.info('Load model')
     filepath = f'{project_dir}/models/{config.model_name}.h5'
     custom_objects = {
         'cross_entropy_loss': pairwise_losses.cross_entropy_loss
     }
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
-    get_logger().info('Load val dataset')
+    logger.info('Load val dataset')
     with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'rb') as file:
         data_processor = pickle.load(file)
     with open(f'{project_dir}/data/processed/{config.dataset}.val.pkl', 'rb') as file:
         val_dataset = pickle.load(file)
 
-    get_logger().info('Predict')
+    logger.info('Predict')
     map_score, ndcg_score = predict(model, val_dataset, data_processor, config.verbose)
-    get_logger().info(f'MAP: {map_score}, NDCG: {ndcg_score}')
+    logger.info(f'MAP: {map_score}, NDCG: {ndcg_score}')
     mlflow.log_metric('MAP', map_score)
     mlflow.log_metric('NDCG', ndcg_score)

@@ -8,13 +8,13 @@ from typing import Dict, Iterable
 import numpy as np
 import pandas as pd
 import sklearn
+from loguru import logger
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from src.data.queries import preprocess_query, get_popular_queries
 from src.data.recipes import load_raw_recipes
-from src.utils.logger import create_logger, get_logger
 from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[2]
@@ -62,7 +62,7 @@ def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
         if len(example['docs']) > 2:
             large_dataset[key] = example
     large_dataset = list(large_dataset.values())
-    get_logger().info(f'Large listwise dataset was created with {len(large_dataset)} lists')
+    logger.info(f'Large listwise dataset was created with {len(large_dataset)} lists')
     train_dataset, val_dataset = train_test_split(large_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', 'listwise.large.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
@@ -70,7 +70,7 @@ def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
         pickle.dump(val_dataset, file)
 
     large_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(large_recipe_ids)}
-    get_logger().info(f'Large recipe data was created with {len(large_recipes)} recipes')
+    logger.info(f'Large recipe data was created with {len(large_recipes)} recipes')
     with open(os.path.join(project_dir, 'data', 'processed', 'recipes.large.pkl'), 'wb') as file:
         pickle.dump(large_recipes, file)
 
@@ -80,7 +80,7 @@ def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
 def generate_medium(recipes: Dict, large_dataset: Iterable, target_queries: Iterable[str],
                     train_size: float) -> Iterable:
     medium_dataset = [example for example in large_dataset if example['query'] in target_queries]
-    get_logger().info(f'Medium listwise dataset was created with {len(medium_dataset)} lists')
+    logger.info(f'Medium listwise dataset was created with {len(medium_dataset)} lists')
     train_dataset, val_dataset = train_test_split(medium_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', 'listwise.medium.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
@@ -91,7 +91,7 @@ def generate_medium(recipes: Dict, large_dataset: Iterable, target_queries: Iter
     for example in medium_dataset:
         medium_recipe_ids.extend([doc['doc_id'] for doc in example['docs']])
     medium_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(medium_recipe_ids)}
-    get_logger().info(f'Medium recipe data was created with {len(medium_recipes)} recipes')
+    logger.info(f'Medium recipe data was created with {len(medium_recipes)} recipes')
     with open(os.path.join(project_dir, 'data', 'processed', 'recipes.medium.pkl'), 'wb') as file:
         pickle.dump(medium_recipes, file)
 
@@ -101,7 +101,7 @@ def generate_medium(recipes: Dict, large_dataset: Iterable, target_queries: Iter
 def generate_small(recipes: Dict, medium_dataset: Iterable, train_size: float):
     np.random.shuffle(medium_dataset)
     small_dataset, _ = train_test_split(medium_dataset, train_size=0.03, shuffle=True)
-    get_logger().info(f'Small listwise dataset was created with {len(small_dataset)} lists')
+    logger.info(f'Small listwise dataset was created with {len(small_dataset)} lists')
     train_dataset, val_dataset = train_test_split(small_dataset, train_size=train_size, shuffle=True)
     with open(os.path.join(project_dir, 'data', 'processed', 'listwise.small.train.pkl'), 'wb') as file:
         pickle.dump(train_dataset, file)
@@ -112,7 +112,7 @@ def generate_small(recipes: Dict, medium_dataset: Iterable, train_size: float):
     for example in small_dataset:
         small_recipe_ids.extend([doc['doc_id'] for doc in example['docs']])
     small_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(small_recipe_ids)}
-    get_logger().info(f'Small recipe data was created with {len(small_recipes)} recipes')
+    logger.info(f'Small recipe data was created with {len(small_recipes)} recipes')
     with open(os.path.join(project_dir, 'data', 'processed', 'recipes.small.pkl'), 'wb') as file:
         pickle.dump(small_recipes, file)
 
@@ -127,7 +127,7 @@ def generate(train_size: float = 0.8):
     Each row represents how a user interacted with a list of search results and hence,
     it consists of a query with several documents with its ID and label (clicked=1, not clicked=0).
     """
-    get_logger().info('Load available recipe IDs')
+    logger.info('Load available recipe IDs')
     recipes = load_raw_recipes()
     interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'))
     interactions_df = interactions_df[interactions_df['recipe_id'] != -1]
@@ -138,24 +138,23 @@ def generate(train_size: float = 0.8):
     popular_queries = get_popular_queries(interactions_df, top_n=3000)
     popular_queries = set(popular_queries)
 
-    get_logger().info('Genereate large dataset')
+    logger.info('Genereate large dataset')
     # 351495 lists, 136764 recipes
     dataset = generate_large(recipes, interactions_df, train_size)
     gc.collect()
 
-    get_logger().info('Genereate medium dataset')
+    logger.info('Genereate medium dataset')
     # 191144 lists, 55117 recipes
     dataset = generate_medium(recipes, dataset, popular_queries, train_size)
     gc.collect()
 
-    get_logger().info('Genereate small dataset')
+    logger.info('Genereate small dataset')
     # 5734 lists, 24713 recipes
     generate_small(recipes, dataset, train_size)
 
-    get_logger().info('Done')
+    logger.info('Done')
 
 
 if __name__ == '__main__':
-    create_logger()
     set_seed()
     generate()

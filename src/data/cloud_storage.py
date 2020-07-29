@@ -4,8 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from google.cloud import storage
 from google.cloud.storage import Bucket
-
-from src.utils.logger import create_logger, get_logger
+from loguru import logger
 
 load_dotenv()
 project_dir = Path(__file__).resolve().parents[2]
@@ -41,6 +40,6 @@ if __name__ == '__main__':
     ]:
         source = f'{project_dir}/{filepath}'
         destination = filepath
-        get_logger().info(f'Upload {source} to {destination}')
+        logger.info(f'Upload {source} to {destination}')
         cloud_storage.upload(source, destination)
-    get_logger().info('Done')
+    logger.info('Done')

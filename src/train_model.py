@@ -1,16 +1,16 @@
 import datetime
-import os
 import pickle
 from dataclasses import asdict
 from pathlib import Path
 
 import mlflow
 import tensorflow as tf
+from loguru import logger
+from tensorflow import keras
+
 from src.config import TrainConfig
 from src.data.data_generator import DataGenerator
 from src.losses import pairwise_losses
-from src.utils.logger import get_logger
-from tensorflow import keras
 
 project_dir = Path(__file__).resolve().parents[1]
 
@@ -22,7 +22,7 @@ project_dir = Path(__file__).resolve().parents[1]
 def train(config: TrainConfig):
     mlflow.log_params(asdict(config))
 
-    get_logger().info('Transform examples into dataset')
+    logger.info('Transform examples into dataset')
     data_processor = config.data_processor
 
     train_df = data_processor.listwise_to_df(f'{config.dataset}.train.pkl')
@@ -33,7 +33,7 @@ def train(config: TrainConfig):
     train_generator = DataGenerator(train_df, data_processor)
     val_generator = DataGenerator(val_df, data_processor)
 
-    get_logger().info('Build model')
+    logger.info('Build model')
     model = config.model(data_processor).build()
 
     model.compile(
@@ -42,7 +42,7 @@ def train(config: TrainConfig):
         metrics=['accuracy']
     )
 
-    get_logger().info('Train model')
+    logger.info('Train model')
     log_dir = f'{project_dir}/logs/fit/{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}'
     callbacks = [
         tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
@@ -56,12 +56,12 @@ def train(config: TrainConfig):
         verbose=config.verbose,
     )
 
-    get_logger().info(history.history)
+    logger.info(history.history)
     for metric in history.history:
         for i, value in enumerate(history.history[metric]):
             mlflow.log_metric(metric, value, step=i)
 
-    get_logger().info('Save model')
+    logger.info('Save model')
     model.save(f'{project_dir}/models/{model.name}.h5')
 
-    get_logger().info('Done')
+    logger.info('Done')

@@ -23,6 +23,7 @@ python-dotenv = "^0.13.0"
 google-cloud-storage = "^1.29.0"
 mlflow = "^1.9.1"
 annoy = "^1.16.3"
+loguru = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.4"
