@@ -10,6 +10,7 @@ from tensorflow import keras
 from tqdm import tqdm
 
 from src.config import EvalConfig
+from src.layers.bias import AddBias0
 from src.losses import pairwise_losses
 from src.metrics import metrics
 
@@ -47,7 +48,8 @@ def evaluate(config: EvalConfig):
     logger.info('Load model')
     filepath = f'{project_dir}/models/{config.model_name}.h5'
     custom_objects = {
-        'cross_entropy_loss': pairwise_losses.cross_entropy_loss
+        'cross_entropy_loss': pairwise_losses.cross_entropy_loss,
+        'AddBias0': AddBias0,
     }
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
 

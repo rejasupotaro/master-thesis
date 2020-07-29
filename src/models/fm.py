@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
+from src.layers.bias import AddBias0
 from src.models.base_model import BaseModel
 
 
@@ -64,10 +65,9 @@ class FMQuery(BaseModel):
         country = embedding(country_input)
         country = tf.reshape(country, shape=(-1, 1))
         biases = layers.Add()([query, title, ingredients, description, author, country])
+        biases = AddBias0()(biases)
 
-        bias_0 = tf.Variable(0.)
-
-        output = layers.Activation('sigmoid', name='label')(bias_0 + biases + interactions)
+        output = layers.Activation('sigmoid', name='label')(biases + interactions)
         return tf.keras.Model(inputs=inputs, outputs=output, name=self.name)
 
 
@@ -129,8 +129,7 @@ class FMAll(BaseModel):
             feature = tf.reshape(feature, shape=(-1, 1))
             biases.append(feature)
         biases = layers.Add()(biases)
+        biases = AddBias0()(biases)
 
-        bias_0 = tf.Variable(0.)
-
-        output = layers.Activation('sigmoid', name='label')(bias_0 + biases + interactions)
+        output = layers.Activation('sigmoid', name='label')(biases + interactions)
         return tf.keras.Model(inputs=inputs, outputs=output, name=self.name)
