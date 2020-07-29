@@ -15,10 +15,28 @@ from src.config import TrainConfig, EvalConfig
 from src.data import preprocessors
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
-from src.models import naive, nrmf, fm, autoint
+from src.models import representation, naive, nrmf, fm, autoint
 from src.train_model import train
 
 project_dir = Path(__file__).resolve().parents[1]
+
+
+def ebr_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+    train_config = TrainConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model=representation.EBR,
+        epochs=epochs,
+        verbose=2,
+    )
+    eval_config = EvalConfig(
+        dataset=f'listwise.{dataset_size}',
+        data_processor_filename=f'concat_data_processor.{dataset_size}',
+        model_name='ebr',
+        verbose=0,
+    )
+    return train_config, eval_config
 
 
 def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
@@ -197,6 +215,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
             bucket.download(source, destination)
 
     train_config, eval_config = {
+        'ebr': ebr_config,
         'naive': naive_config,
         'nrmf': nrmf_config,
         'nrmf_simple_query': nrmf_simple_query_config,
