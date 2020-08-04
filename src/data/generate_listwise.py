@@ -132,6 +132,7 @@ def generate(train_size: float = 0.8):
     interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'))
     interactions_df = interactions_df[interactions_df['recipe_id'] != -1]
     interactions_df = interactions_df[interactions_df['page'] == 1]
+    interactions_df = interactions_df[~interactions_df['session_id'].isna()]
     interactions_df = sklearn.utils.shuffle(interactions_df)
 
     interactions_df['query'] = interactions_df['query'].apply(preprocess_query)
