@@ -14,13 +14,12 @@ from src.data.recipes import load_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size: str, num_words: int = 200000, max_negatives: int = 10, batch_size: int = 128):
+    def __init__(self, dataset_size: str, num_words: int = 200000, max_negatives: int = 10):
         self.recipes = load_recipes(dataset_size)
         self.num_words: int = num_words
         self.tokenizer: Optional[Tokenizer] = None
         self.encoder: Dict[str, LabelEncoder] = {}
         self.max_negatives: int = max_negatives
-        self.batch_size: int = batch_size
 
     @property
     def total_words(self) -> int:
@@ -113,10 +112,10 @@ class ConcatDataProcessor(DataProcessor):
         df = df.copy()
         self.process_df(df)
 
-        df['query_word_ids'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
-        df['title_word_ids'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
-        df['ingredients_word_ids'] = self.tokenizer.texts_to_sequences(df['ingredients'].tolist())
-        df['description_word_ids'] = self.tokenizer.texts_to_sequences(df['description'].tolist())
+        df['query'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
+        df['title'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
+        df['ingredients'] = self.tokenizer.texts_to_sequences(df['ingredients'].tolist())
+        df['description'] = self.tokenizer.texts_to_sequences(df['description'].tolist())
 
         df['author'] = df['author'].apply(lambda c: c if c in self.encoder['author'].classes_ else '')
         df['author'] = self.encoder['author'].transform(df['author'])
@@ -124,36 +123,35 @@ class ConcatDataProcessor(DataProcessor):
         df['country'] = df['country'].apply(lambda c: c if c in self.encoder['country'].classes_ else '')
         df['country'] = self.encoder['country'].transform(df['country'])
 
-        query_word_ids = df['query_word_ids'].tolist()
-        query_word_ids = pad_sequences(query_word_ids,
-                                       padding='post',
-                                       truncating='post',
-                                       maxlen=6)
-
-        title_word_ids = df['title_word_ids'].tolist()
-        title_word_ids = pad_sequences(title_word_ids,
-                                       padding='post',
-                                       truncating='post',
-                                       maxlen=20)
-        ingredients_word_ids = df['ingredients_word_ids'].tolist()
-        ingredients_word_ids = pad_sequences(ingredients_word_ids,
-                                             padding='post',
-                                             truncating='post',
-                                             maxlen=300)
-        description_word_ids = df['description_word_ids'].tolist()
-        description_word_ids = pad_sequences(description_word_ids,
-                                             padding='post',
-                                             truncating='post',
-                                             maxlen=100)
+        query = df['query'].tolist()
+        query = pad_sequences(query,
+                              padding='post',
+                              truncating='post',
+                              maxlen=6)
+        title = df['title'].tolist()
+        title = pad_sequences(title,
+                              padding='post',
+                              truncating='post',
+                              maxlen=20)
+        ingredients = df['ingredients'].tolist()
+        ingredients = pad_sequences(ingredients,
+                                    padding='post',
+                                    truncating='post',
+                                    maxlen=300)
+        description = df['description'].tolist()
+        description = pad_sequences(description,
+                                    padding='post',
+                                    truncating='post',
+                                    maxlen=100)
         author = df['author'].to_numpy()
         country = df['country'].to_numpy()
         label = df['label'].to_numpy()
 
         return {
-                   'query_word_ids': query_word_ids,
-                   'title_word_ids': title_word_ids,
-                   'ingredients_word_ids': ingredients_word_ids,
-                   'description_word_ids': description_word_ids,
+                   'query': query,
+                   'title': title,
+                   'ingredients': ingredients,
+                   'description': description,
                    'author': author,
                    'country': country
                }, label
@@ -197,11 +195,11 @@ class MultiInstanceDataProcessor(DataProcessor):
         df = df.copy()
         self.process_df(df)
 
-        df['query_word_ids'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
-        df['title_word_ids'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
-        df['ingredients_word_ids'] = [self.tokenizer.texts_to_sequences(ingredients) for ingredients in
-                                      df['ingredients']]
-        df['description_word_ids'] = self.tokenizer.texts_to_sequences(df['description'].tolist())
+        df['query'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
+        df['title'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
+        df['ingredients'] = [self.tokenizer.texts_to_sequences(ingredients) for ingredients in
+                             df['ingredients']]
+        df['description'] = self.tokenizer.texts_to_sequences(df['description'].tolist())
 
         df['author'] = df['author'].apply(lambda c: c if c in self.encoder['author'].classes_ else '')
         df['author'] = self.encoder['author'].transform(df['author'])
@@ -209,35 +207,34 @@ class MultiInstanceDataProcessor(DataProcessor):
         df['country'] = df['country'].apply(lambda c: c if c in self.encoder['country'].classes_ else '')
         df['country'] = self.encoder['country'].transform(df['country'])
 
-        query_word_ids = df['query_word_ids'].tolist()
-        query_word_ids = pad_sequences(query_word_ids,
-                                       padding='post',
-                                       truncating='post',
-                                       maxlen=6)
-
-        title_word_ids = df['title_word_ids'].tolist()
-        title_word_ids = pad_sequences(title_word_ids,
-                                       padding='post',
-                                       truncating='post',
-                                       maxlen=20)
-        ingredients_word_ids = df['ingredients_word_ids'].tolist()
-        ingredients_word_ids = [pad_sequences(word_ids, padding='post', truncating='post', maxlen=20) for word_ids in
-                                ingredients_word_ids]
-        ingredients_word_ids = pad_sequences(ingredients_word_ids, padding='post', truncating='post', maxlen=30)
-        description_word_ids = df['description_word_ids'].tolist()
-        description_word_ids = pad_sequences(description_word_ids,
-                                             padding='post',
-                                             truncating='post',
-                                             maxlen=100)
+        query = df['query'].tolist()
+        query = pad_sequences(query,
+                              padding='post',
+                              truncating='post',
+                              maxlen=6)
+        title = df['title'].tolist()
+        title = pad_sequences(title,
+                              padding='post',
+                              truncating='post',
+                              maxlen=20)
+        ingredients = df['ingredients'].tolist()
+        ingredients = [pad_sequences(word_ids, padding='post', truncating='post', maxlen=20) for word_ids in
+                       ingredients]
+        ingredients = pad_sequences(ingredients, padding='post', truncating='post', maxlen=30)
+        description = df['description'].tolist()
+        description = pad_sequences(description,
+                                    padding='post',
+                                    truncating='post',
+                                    maxlen=100)
         author = df['author'].to_numpy()
         country = df['country'].to_numpy()
         label = df['label'].to_numpy()
 
         return {
-                   'query_word_ids': query_word_ids,
-                   'title_word_ids': title_word_ids,
-                   'ingredients_word_ids': ingredients_word_ids,
-                   'description_word_ids': description_word_ids,
+                   'query': query,
+                   'title': title,
+                   'ingredients': ingredients,
+                   'description': description,
                    'author': author,
                    'country': country
                }, label
