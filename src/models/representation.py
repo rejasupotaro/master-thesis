@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers
 
 from src.models.base_model import BaseModel
@@ -11,8 +10,7 @@ class EBR(BaseModel):
         return 'ebr'
 
     def build_query_encoder(self, embedding):
-        query_len = 6
-        query_input = keras.Input(shape=(query_len,), name='query_word_ids')
+        query_input = self.new_query_input()
         inputs = [query_input]
         query = embedding(query_input)
         encoded_query = layers.GlobalMaxPooling1D()(query)
@@ -20,14 +18,11 @@ class EBR(BaseModel):
         return inputs, encoded_query, encoder
 
     def build_recipe_encoder(self, embedding):
-        title_len = 20
-        ingredients_len = 300
-        description_len = 100
-        title_input = keras.Input(shape=(title_len,), name='title_word_ids')
-        ingredients_input = keras.Input(shape=(ingredients_len,), name='ingredients_word_ids')
-        description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        author_input = keras.Input(shape=(1,), name='author')
-        country_input = keras.Input(shape=(1,), name='country')
+        title_input = self.new_title_input()
+        ingredients_input = self.new_ingredients_input()
+        description_input = self.new_description_input()
+        author_input = self.new_author_input()
+        country_input = self.new_country_input()
         inputs = [title_input, ingredients_input, description_input, author_input, country_input]
 
         title = embedding(title_input)

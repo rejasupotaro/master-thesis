@@ -13,20 +13,17 @@ class NRMF(BaseModel):
         return 'nrmf'
 
     def build(self):
-        query_len = 6
-        title_len = 20
         ingredient_len = 20
         n_ingredients = 30
-        description_len = 100
         n_gram = 3
         embedding_dim = 128
 
-        query_input = keras.Input(shape=(query_len,), name='query_word_ids')
-        title_input = keras.Input(shape=(title_len,), name='title_word_ids')
-        ingredients_input = keras.Input(shape=(n_ingredients, ingredient_len,), name='ingredients_word_ids')
-        description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        author_input = keras.Input(shape=(1,), name='author')
-        country_input = keras.Input(shape=(1,), name='country')
+        query_input = self.new_query_input()
+        title_input = self.new_title_input()
+        ingredients_input = keras.Input(shape=(n_ingredients, ingredient_len,), name='ingredients')
+        description_input = self.new_description_input()
+        author_input = self.new_author_input()
+        country_input = self.new_country_input()
         inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
 
         embedding = layers.Embedding(self.total_words, embedding_dim, mask_zero=True)
@@ -76,17 +73,12 @@ class NRMFSimpleQuery(BaseModel):
         return 'nrmf_simple_query'
 
     def build(self):
-        query_len = 6
-        title_len = 20
-        ingredients_len = 300
-        description_len = 100
-
-        query_input = keras.Input(shape=(query_len,), name='query_word_ids')
-        title_input = keras.Input(shape=(title_len,), name='title_word_ids')
-        ingredients_input = keras.Input(shape=(ingredients_len,), name='ingredients_word_ids')
-        description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        author_input = keras.Input(shape=(1,), name='author')
-        country_input = keras.Input(shape=(1,), name='country')
+        query_input = self.new_query_input()
+        title_input = self.new_title_input()
+        ingredients_input = self.new_ingredients_input()
+        description_input = self.new_description_input()
+        author_input = self.new_author_input()
+        country_input = self.new_country_input()
         inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
@@ -122,17 +114,12 @@ class NRMFSimpleAll(BaseModel):
         return 'nrmf_simple_all'
 
     def build(self):
-        query_len = 6
-        title_len = 20
-        ingredients_len = 300
-        description_len = 100
-
-        query_input = keras.Input(shape=(query_len,), name='query_word_ids')
-        title_input = keras.Input(shape=(title_len,), name='title_word_ids')
-        ingredients_input = keras.Input(shape=(ingredients_len,), name='ingredients_word_ids')
-        description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        author_input = keras.Input(shape=(1,), name='author')
-        country_input = keras.Input(shape=(1,), name='country')
+        query_input = self.new_query_input()
+        title_input = self.new_title_input()
+        ingredients_input = self.new_ingredients_input()
+        description_input = self.new_description_input()
+        author_input = self.new_author_input()
+        country_input = self.new_country_input()
         inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)

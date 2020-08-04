@@ -1,7 +1,6 @@
 import itertools
 
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers
 
 from src.layers.bias import AddBias0
@@ -14,22 +13,17 @@ class FMQuery(BaseModel):
         return 'fm_query'
 
     def build(self):
-        query_len = 6
-        title_len = 20
-        ingredients_len = 300
-        description_len = 100
-
         categorical_input_size = {
             'author': self.total_authors,
             'country': self.total_countries,
         }
 
-        query_input = keras.Input(shape=(query_len,), name='query_word_ids')
-        title_input = keras.Input(shape=(title_len,), name='title_word_ids')
-        ingredients_input = keras.Input(shape=(ingredients_len,), name='ingredients_word_ids')
-        description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        author_input = keras.Input(shape=(1,), name='author')
-        country_input = keras.Input(shape=(1,), name='country')
+        query_input = self.new_query_input()
+        title_input = self.new_title_input()
+        ingredients_input = self.new_ingredients_input()
+        description_input = self.new_description_input()
+        author_input = self.new_author_input()
+        country_input = self.new_country_input()
         inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
@@ -77,28 +71,21 @@ class FMAll(BaseModel):
         return 'fm_all'
 
     def build(self):
-        query_len = 6
-        title_len = 20
-        ingredients_len = 300
-        description_len = 100
-
         categorical_input_size = {
             'author': self.total_authors,
             'country': self.total_countries,
         }
 
         text_inputs = [
-            keras.Input(shape=(query_len,), name='query_word_ids'),
-            keras.Input(shape=(title_len,), name='title_word_ids'),
-            keras.Input(shape=(ingredients_len,), name='ingredients_word_ids'),
-            keras.Input(shape=(description_len,), name='description_word_ids'),
+            self.new_query_input(),
+            self.new_title_input(),
+            self.new_ingredients_input(),
+            self.new_description_input(),
         ]
-
         categorical_inputs = [
-            keras.Input(shape=(1,), name='author'),
-            keras.Input(shape=(1,), name='country'),
+            self.new_author_input(),
+            self.new_country_input(),
         ]
-
         inputs = text_inputs + categorical_inputs
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)

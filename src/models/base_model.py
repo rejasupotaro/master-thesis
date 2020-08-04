@@ -1,6 +1,7 @@
 import abc
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras import layers
 
 from src.data.preprocessors import DataProcessor
@@ -17,6 +18,24 @@ class BaseModel(abc.ABC):
     @abc.abstractmethod
     def name(self) -> str:
         raise NotImplementedError('Calling an abstract method.')
+
+    def new_query_input(self, size=6):
+        return tf.keras.Input(shape=(size,), name='query')
+
+    def new_title_input(self, size=20):
+        return tf.keras.Input(shape=(size,), name='title')
+
+    def new_ingredients_input(self, size=300):
+        return tf.keras.Input(shape=(size,), name='ingredients')
+
+    def new_description_input(self, size=100):
+        return tf.keras.Input(shape=(size,), name='description')
+
+    def new_author_input(self, size=1):
+        return tf.keras.Input(shape=(size,), name='author')
+
+    def new_country_input(self, size=1):
+        return tf.keras.Input(shape=(size,), name='country')
 
     def ngram_block(self, n_gram: int, total_words: int):
         def wrapped(inputs):

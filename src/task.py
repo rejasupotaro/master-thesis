@@ -15,7 +15,7 @@ from src.config import TrainConfig, EvalConfig
 from src.data import preprocessors
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
-from src.models import representation, naive, nrmf, fm, autoint
+from src.models import representation, naive, nrmf, fm, attention
 from src.train_model import train
 
 project_dir = Path(__file__).resolve().parents[1]
@@ -152,7 +152,7 @@ def autoint_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, 
         dataset=f'listwise.{dataset_size}',
         data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
         data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=autoint.AutoIntSimple,
+        model=attention.Attention,
         epochs=epochs,
         verbose=2,
     )

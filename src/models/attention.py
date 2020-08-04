@@ -1,36 +1,30 @@
 import tensorflow as tf
-from tensorflow import keras
 from tensorflow.keras import layers
 
 from src.models.base_model import BaseModel
 
 
-class AutoIntSimple(BaseModel):
+class Attention(BaseModel):
     @property
     def name(self) -> str:
-        return 'autoint_simple'
+        return 'attention'
 
     def build(self):
-        query_len = 6
-        title_len = 20
-        ingredients_len = 300
-        description_len = 100
-
         categorical_input_size = {
             'author': self.total_authors,
             'country': self.total_countries,
         }
 
-        query_input = keras.Input(shape=(query_len,), name='query_word_ids')
-        title_input = keras.Input(shape=(title_len,), name='title_word_ids')
-        ingredients_input = keras.Input(shape=(ingredients_len,), name='ingredients_word_ids')
-        description_input = keras.Input(shape=(description_len,), name='description_word_ids')
-        text_inputs = [query_input, title_input, ingredients_input, description_input]
-
-        author_input = keras.Input(shape=(1,), name='author')
-        country_input = keras.Input(shape=(1,), name='country')
-        categorical_inputs = [author_input, country_input]
-
+        text_inputs = [
+            self.new_query_input(),
+            self.new_title_input(),
+            self.new_ingredients_input(),
+            self.new_description_input(),
+        ]
+        categorical_inputs = [
+            self.new_author_input(),
+            self.new_country_input(),
+        ]
         inputs = text_inputs + categorical_inputs
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
