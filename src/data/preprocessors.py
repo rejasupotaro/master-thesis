@@ -35,7 +35,7 @@ class DataProcessor(abc.ABC):
 
     def listwise_to_df(self, listwise_filename: str) -> DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
-        with open(os.path.join(project_dir, 'data', 'processed', listwise_filename), 'rb') as file:
+        with open(f'{project_dir}/data/processed/{listwise_filename}', 'rb') as file:
             dataset = pickle.load(file)
 
         rows = []
@@ -124,25 +124,33 @@ class ConcatDataProcessor(DataProcessor):
         df['country'] = self.encoder['country'].transform(df['country'])
 
         query = df['query'].tolist()
-        query = pad_sequences(query,
-                              padding='post',
-                              truncating='post',
-                              maxlen=6)
+        query = pad_sequences(
+            query,
+            padding='post',
+            truncating='post',
+            maxlen=6
+        )
         title = df['title'].tolist()
-        title = pad_sequences(title,
-                              padding='post',
-                              truncating='post',
-                              maxlen=20)
+        title = pad_sequences(
+            title,
+            padding='post',
+            truncating='post',
+            maxlen=20
+        )
         ingredients = df['ingredients'].tolist()
-        ingredients = pad_sequences(ingredients,
-                                    padding='post',
-                                    truncating='post',
-                                    maxlen=300)
+        ingredients = pad_sequences(
+            ingredients,
+            padding='post',
+            truncating='post',
+            maxlen=300
+        )
         description = df['description'].tolist()
-        description = pad_sequences(description,
-                                    padding='post',
-                                    truncating='post',
-                                    maxlen=100)
+        description = pad_sequences(
+            description,
+            padding='post',
+            truncating='post',
+            maxlen=100
+        )
         author = df['author'].to_numpy()
         country = df['country'].to_numpy()
         label = df['label'].to_numpy()
@@ -208,24 +216,31 @@ class MultiInstanceDataProcessor(DataProcessor):
         df['country'] = self.encoder['country'].transform(df['country'])
 
         query = df['query'].tolist()
-        query = pad_sequences(query,
-                              padding='post',
-                              truncating='post',
-                              maxlen=6)
+        query = pad_sequences(
+            query,
+            padding='post',
+            truncating='post',
+            maxlen=6
+        )
         title = df['title'].tolist()
-        title = pad_sequences(title,
-                              padding='post',
-                              truncating='post',
-                              maxlen=20)
+        title = pad_sequences(
+            title,
+            padding='post',
+            truncating='post',
+            maxlen=20
+        )
         ingredients = df['ingredients'].tolist()
-        ingredients = [pad_sequences(word_ids, padding='post', truncating='post', maxlen=20) for word_ids in
-                       ingredients]
+        ingredients = [
+            pad_sequences(word_ids, padding='post', truncating='post', maxlen=20) for word_ids in ingredients
+        ]
         ingredients = pad_sequences(ingredients, padding='post', truncating='post', maxlen=30)
         description = df['description'].tolist()
-        description = pad_sequences(description,
-                                    padding='post',
-                                    truncating='post',
-                                    maxlen=100)
+        description = pad_sequences(
+            description,
+            padding='post',
+            truncating='post',
+            maxlen=100
+        )
         author = df['author'].to_numpy()
         country = df['country'].to_numpy()
         label = df['label'].to_numpy()

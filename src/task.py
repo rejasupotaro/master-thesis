@@ -3,7 +3,6 @@ import os
 import sys
 from pathlib import Path
 from time import time
-from typing import Tuple
 
 import click
 import mlflow
@@ -11,158 +10,12 @@ import tensorflow as tf
 from loguru import logger
 from mlflow.tracking import MlflowClient
 
-from src.config import TrainConfig, EvalConfig
-from src.data import preprocessors
+from src import config
 from src.data.cloud_storage import CloudStorage
 from src.evaluate_model import evaluate
-from src.models import representation, naive, nrmf, fm, attention
 from src.train_model import train
 
 project_dir = Path(__file__).resolve().parents[1]
-
-
-def ebr_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=representation.EBR,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='ebr',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def naive_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=naive.Naive,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='naive',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def nrmf_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.MultiInstanceDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
-        model=nrmf.NRMF,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'multi_instance_data_processor.{dataset_size}',
-        model_name='nrmf',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def nrmf_simple_query_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=nrmf.NRMFSimpleQuery,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='nrmf_simple_query',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def nrmf_simple_all_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=nrmf.NRMFSimpleAll,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='nrmf_simple_all',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def fm_query_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=fm.FMQuery,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='fm_query',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def fm_all_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=fm.FMAll,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='fm_all',
-        verbose=0,
-    )
-    return train_config, eval_config
-
-
-def autoint_simple_config(dataset_size: str, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
-    train_config = TrainConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor=preprocessors.ConcatDataProcessor(dataset_size=dataset_size),
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model=attention.Attention,
-        epochs=epochs,
-        verbose=2,
-    )
-    eval_config = EvalConfig(
-        dataset=f'listwise.{dataset_size}',
-        data_processor_filename=f'concat_data_processor.{dataset_size}',
-        model_name='autoint_simple',
-        verbose=0,
-    )
-    return train_config, eval_config
 
 
 @click.command()
@@ -176,7 +29,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     logger.add(sys.stdout, format='{time} {level} {message}')
     log_filepath = f'{project_dir}/logs/{int(time())}.log'
     logger.add(log_filepath)
-    mlflow.set_tracking_uri(os.path.join(project_dir, 'logs', 'mlruns'))
+    mlflow.set_tracking_uri(f'{project_dir}/logs/mlruns')
     mlflow.start_run()
     client = MlflowClient()
     experiments = client.list_experiments()
@@ -201,9 +54,9 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     if env == 'cloud':
         logger.info('Download data')
         bucket = CloudStorage(bucket_name)
-        Path(os.path.join(project_dir, 'data', 'raw')).mkdir(parents=True, exist_ok=True)
-        Path(os.path.join(project_dir, 'data', 'processed')).mkdir(parents=True, exist_ok=True)
-        Path(os.path.join(project_dir, 'models')).mkdir(exist_ok=True)
+        Path(f'{project_dir}/data/raw').mkdir(parents=True, exist_ok=True)
+        Path(f'{project_dir}/data/processed').mkdir(parents=True, exist_ok=True)
+        Path(f'{project_dir}/models').mkdir(exist_ok=True)
         for filepath in [
             f'data/processed/recipes.{dataset_size}.pkl',
             f'data/processed/listwise.{dataset_size}.train.pkl',
@@ -215,14 +68,14 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
             bucket.download(source, destination)
 
     train_config, eval_config = {
-        'ebr': ebr_config,
-        'naive': naive_config,
-        'nrmf': nrmf_config,
-        'nrmf_simple_query': nrmf_simple_query_config,
-        'nrmf_simple_all': nrmf_simple_all_config,
-        'fm_query': fm_query_config,
-        'fm_all': fm_all_config,
-        'autoint_simple': autoint_simple_config,
+        'ebr': config.ebr_config,
+        'naive': config.naive_config,
+        'nrmf': config.nrmf_config,
+        'nrmf_simple_query': config.nrmf_simple_query_config,
+        'nrmf_simple_all': config.nrmf_simple_all_config,
+        'fm_query': config.fm_query_config,
+        'fm_all': config.fm_all_config,
+        'autoint_simple': config.autoint_simple_config,
     }[model_name](dataset_size, epochs)
 
     logger.info('Train model')
@@ -235,7 +88,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     if env == 'cloud' and job_name == 'chief':
         logger.info('Upload results')
         bucket = CloudStorage(bucket_name)
-        base_filepath = os.path.join(project_dir, 'logs', 'mlruns', experiment_id)
+        base_filepath = f'{project_dir}/logs/mlruns/{experiment_id}'
         for file in Path(base_filepath).rglob('*'):
             if file.is_file():
                 filename = str(file)[len(base_filepath) + 1:]

@@ -1,5 +1,4 @@
 import gc
-import os
 import pickle
 from collections import defaultdict
 from pathlib import Path
@@ -64,14 +63,14 @@ def generate_large(recipes: Dict, interactions_df: DataFrame, train_size: float,
     large_dataset = list(large_dataset.values())
     logger.info(f'Large listwise dataset was created with {len(large_dataset)} lists')
     train_dataset, val_dataset = train_test_split(large_dataset, train_size=train_size, shuffle=True)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.large.train.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/listwise.large.train.pkl', 'wb') as file:
         pickle.dump(train_dataset, file)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.large.val.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/listwise.large.val.pkl', 'wb') as file:
         pickle.dump(val_dataset, file)
 
     large_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(large_recipe_ids)}
     logger.info(f'Large recipe data was created with {len(large_recipes)} recipes')
-    with open(os.path.join(project_dir, 'data', 'processed', 'recipes.large.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/recipes.large.pkl', 'wb') as file:
         pickle.dump(large_recipes, file)
 
     return large_dataset
@@ -82,9 +81,9 @@ def generate_medium(recipes: Dict, large_dataset: Iterable, target_queries: Iter
     medium_dataset = [example for example in large_dataset if example['query'] in target_queries]
     logger.info(f'Medium listwise dataset was created with {len(medium_dataset)} lists')
     train_dataset, val_dataset = train_test_split(medium_dataset, train_size=train_size, shuffle=True)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.medium.train.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/listwise.medium.train.pkl', 'wb') as file:
         pickle.dump(train_dataset, file)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.medium.val.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/listwise.medium.val.pkl', 'wb') as file:
         pickle.dump(val_dataset, file)
 
     medium_recipe_ids = []
@@ -92,7 +91,7 @@ def generate_medium(recipes: Dict, large_dataset: Iterable, target_queries: Iter
         medium_recipe_ids.extend([doc['doc_id'] for doc in example['docs']])
     medium_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(medium_recipe_ids)}
     logger.info(f'Medium recipe data was created with {len(medium_recipes)} recipes')
-    with open(os.path.join(project_dir, 'data', 'processed', 'recipes.medium.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/recipes.medium.pkl', 'wb') as file:
         pickle.dump(medium_recipes, file)
 
     return medium_dataset
@@ -103,9 +102,9 @@ def generate_small(recipes: Dict, medium_dataset: Iterable, train_size: float):
     small_dataset, _ = train_test_split(medium_dataset, train_size=0.03, shuffle=True)
     logger.info(f'Small listwise dataset was created with {len(small_dataset)} lists')
     train_dataset, val_dataset = train_test_split(small_dataset, train_size=train_size, shuffle=True)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.small.train.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/listwise.small.train.pkl', 'wb') as file:
         pickle.dump(train_dataset, file)
-    with open(os.path.join(project_dir, 'data', 'processed', 'listwise.small.val.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/listwise.small.val.pkl', 'wb') as file:
         pickle.dump(val_dataset, file)
 
     small_recipe_ids = []
@@ -113,7 +112,7 @@ def generate_small(recipes: Dict, medium_dataset: Iterable, train_size: float):
         small_recipe_ids.extend([doc['doc_id'] for doc in example['docs']])
     small_recipes = {recipe_id: recipes[recipe_id] for recipe_id in set(small_recipe_ids)}
     logger.info(f'Small recipe data was created with {len(small_recipes)} recipes')
-    with open(os.path.join(project_dir, 'data', 'processed', 'recipes.small.pkl'), 'wb') as file:
+    with open(f'{project_dir}/data/processed/recipes.small.pkl', 'wb') as file:
         pickle.dump(small_recipes, file)
 
 
@@ -129,7 +128,7 @@ def generate(train_size: float = 0.8):
     """
     logger.info('Load available recipe IDs')
     recipes = load_raw_recipes()
-    interactions_df = pd.read_csv(os.path.join(project_dir, 'data', 'raw', 'interactions.csv'))
+    interactions_df = pd.read_csv(f'{project_dir}/data/raw/interactions.csv')
     interactions_df = interactions_df[interactions_df['recipe_id'] != -1]
     interactions_df = interactions_df[interactions_df['page'] == 1]
     interactions_df = interactions_df[~interactions_df['session_id'].isna()]

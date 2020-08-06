@@ -13,7 +13,8 @@ class WeightedInteraction(tf.keras.layers.Layer):
         w_init = tf.constant_initializer(value=0)
         self.field_weights = tf.Variable(
             initial_value=w_init(shape=(self.num_fields, self.num_fields), dtype=tf.float32),
-            constraint=tf.keras.constraints.NonNeg())
+            constraint=tf.keras.constraints.NonNeg()
+        )
         super(WeightedInteraction, self).build(input_shape)
 
     def call(self, inputs, **kwargs):

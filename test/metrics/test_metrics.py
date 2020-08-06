@@ -24,7 +24,7 @@ def test_discount_cumulative_gain():
     y_true = [0, 1, 0]
     y_pred = [0.1, 0.6, 0.4]
     actual = discount_cumulative_gain(y_true, y_pred)
-    assert 1.4 <= actual <= 1.5
+    assert actual == 1.0
 
 
 def test_normalized_dicount_cumulative_gain():

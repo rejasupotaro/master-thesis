@@ -9,27 +9,27 @@ def sort_and_couple(labels: List[int], scores: List[float]):
 
 
 def mean_average_precision(y_true: List[int], y_pred: List[float], threshold: float = 0.5):
-    result = 0.
+    result = 0.0
     pos = 0
     coupled_pair = sort_and_couple(y_true, y_pred)
     for idx, (label, score) in enumerate(coupled_pair):
         if label > threshold:
-            pos += 1.
-            result += pos / (idx + 1.)
+            pos += 1
+            result += pos / (idx + 1.0)
     if pos == 0:
-        return 0.
+        return 0.0
     else:
         return result / pos
 
 
 def discount_cumulative_gain(y_true: List[int], y_pred: List[float], k: int = 20, threshold: float = 0.5):
     coupled_pair = sort_and_couple(y_true, y_pred)
-    result = 0.
+    result = 0.0
     for i, (label, score) in enumerate(coupled_pair):
         if i >= k:
             break
         if label > threshold:
-            result += (np.power(2., label) - 1.) / np.log2(2. + i)
+            result += (np.power(2.0, label) - 1.0) / np.log2(2.0 + i)
     return result
 
 

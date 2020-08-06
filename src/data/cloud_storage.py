@@ -26,7 +26,6 @@ class CloudStorage:
 
 
 if __name__ == '__main__':
-    create_logger()
     cloud_storage = CloudStorage()
 
     for filepath in [

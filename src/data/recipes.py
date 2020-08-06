@@ -9,7 +9,7 @@ project_dir = Path(__file__).resolve().parents[2]
 
 def load_raw_recipes() -> Dict:
     recipes = {}
-    with open(os.path.join(project_dir, 'data', 'raw', 'recipes.json')) as file:
+    with open(f'{project_dir}/data/raw/recipes.json') as file:
         keys = [
             'recipe_id',
             'user_id',
