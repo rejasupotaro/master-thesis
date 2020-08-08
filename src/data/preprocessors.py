@@ -33,7 +33,7 @@ class DataProcessor(abc.ABC):
     def total_countries(self) -> int:
         return len(self.encoder['country'].classes_)
 
-    def listwise_to_df(self, listwise_filename: str) -> DataFrame:
+    def listwise_to_pairs(self, listwise_filename: str) -> DataFrame:
         project_dir = Path(__file__).resolve().parents[2]
         with open(f'{project_dir}/data/processed/{listwise_filename}', 'rb') as file:
             dataset = pickle.load(file)

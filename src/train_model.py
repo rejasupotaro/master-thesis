@@ -25,8 +25,8 @@ def train(config: TrainConfig):
     logger.info('Transform examples into dataset')
     data_processor = config.data_processor
 
-    train_df = data_processor.listwise_to_df(f'{config.dataset}.train.pkl')
-    val_df = data_processor.listwise_to_df(f'{config.dataset}.val.pkl')
+    train_df = data_processor.listwise_to_pairs(f'{config.dataset}.train.pkl')
+    val_df = data_processor.listwise_to_pairs(f'{config.dataset}.val.pkl')
     data_processor.fit(train_df)
     with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'wb') as file:
         pickle.dump(data_processor, file)
