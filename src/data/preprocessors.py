@@ -60,6 +60,34 @@ class DataProcessor(abc.ABC):
                     rows.append(negative)
         return DataFrame(rows)
 
+    def listwise_to_random_pairs(self, listwise_filename: str) -> DataFrame:
+        project_dir = Path(__file__).resolve().parents[2]
+        with open(f'{project_dir}/data/processed/{listwise_filename}', 'rb') as file:
+            dataset = pickle.load(file)
+
+        positives = []
+        negatives = []
+        for example in tqdm(dataset):
+            query = example['query']
+            for doc in example['docs']:
+                data = {
+                    'query': query,
+                    'doc_id': doc['doc_id'],
+                    'label': doc['label']
+                }
+                if doc['label'] == 1:
+                    positives.append(data)
+                negatives.append(data)
+
+        rows = []
+        import random
+
+        for positive in tqdm(positives):
+            for _ in range(self.max_negatives):
+                rows.append(positive)
+                rows.append(random.choice(negatives))
+        return DataFrame(rows)
+
     @abc.abstractmethod
     def process_df(self, df: DataFrame) -> None:
         raise NotImplementedError('Calling an abstract method.')
