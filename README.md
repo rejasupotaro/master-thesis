@@ -16,7 +16,7 @@ This is a draft version of my thesis. It is planned to be completed by mid-Septe
 
 My experiments show that ... (WIP)
 
-The full version is located here: https://github.com/rejasupotaro/master-thesis/blob/master/report.pdf
+The full version is located here: https://github.com/rejasupotaro/master-thesis/blob/master/thesis.pdf
 
 ## Training and Evaluation
 
