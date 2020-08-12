@@ -28,15 +28,12 @@ class CloudStorage:
 if __name__ == '__main__':
     cloud_storage = CloudStorage()
 
-    for filepath in [
-        'data/processed/listwise.small.train.pkl',
-        'data/processed/listwise.small.val.pkl',
-        'data/processed/listwise.medium.train.pkl',
-        'data/processed/listwise.medium.val.pkl',
-        'data/processed/recipes.large.pkl',
-        'data/processed/recipes.medium.pkl',
-        'data/processed/recipes.small.pkl',
-    ]:
+    filepaths = []
+    for i in range(8):
+        filepaths.append(f'data/processed/listwise.{i}.train.pkl')
+        filepaths.append(f'data/processed/listwise.{i}.val.pkl')
+
+    for filepath in filepaths:
         source = f'{project_dir}/{filepath}'
         destination = filepath
         logger.info(f'Upload {source} to {destination}')

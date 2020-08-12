@@ -10,12 +10,15 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tqdm import tqdm
 
-from src.data.recipes import load_recipes
+from src.data.recipes import load_recipes, load_raw_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size: str, num_words: int = 200000, max_negatives: int = 10):
-        self.recipes = load_recipes(dataset_size)
+    def __init__(self, dataset_size: str = None, num_words: int = 200000, max_negatives: int = 10):
+        if dataset_size:
+            self.recipes = load_recipes(dataset_size)
+        else:
+            self.recipes = load_raw_recipes()
         self.num_words: int = num_words
         self.tokenizer: Optional[Tokenizer] = None
         self.encoder: Dict[str, LabelEncoder] = {}
