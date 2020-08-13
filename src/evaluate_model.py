@@ -17,8 +17,7 @@ from src.metrics import metrics
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def predict(model, dataset, data_processor, verbose=1):
-    map_scores = []
+def predict(model, dataset, data_processor, verbose=1) -> float:
     ndcg_scores = []
     for example in (tqdm(dataset) if verbose > 0 else dataset):
         rows = []
@@ -36,15 +35,13 @@ def predict(model, dataset, data_processor, verbose=1):
         df['pred'] = preds
         y_true = df['label'].tolist()
         y_pred = df['pred'].tolist()
-        map_scores.append(metrics.mean_average_precision(y_true, y_pred))
         ndcg_scores.append(metrics.normalized_discount_cumulative_gain(y_true, y_pred))
 
-    map_score = round(np.mean(map_scores), 4)
     ndcg_score = round(np.mean(ndcg_scores), 4)
-    return map_score, ndcg_score
+    return ndcg_score
 
 
-def evaluate(config: EvalConfig):
+def evaluate(config: EvalConfig) -> float:
     logger.info('Load model')
     filepath = f'{project_dir}/models/{config.model_name}.h5'
     custom_objects = {
@@ -60,9 +57,8 @@ def evaluate(config: EvalConfig):
         val_dataset = pickle.load(file)
 
     logger.info('Predict')
-    map_score, ndcg_score = predict(model, val_dataset, data_processor, config.verbose)
-    logger.info(f'MAP: {map_score}, NDCG: {ndcg_score}')
-    mlflow.log_metric('MAP', map_score)
+    ndcg_score = predict(model, val_dataset, data_processor, config.verbose)
+    logger.info(f'NDCG: {ndcg_score}')
     mlflow.log_metric('NDCG', ndcg_score)
 
-    return map_score, ndcg_score
+    return ndcg_score

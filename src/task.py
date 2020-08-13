@@ -19,7 +19,7 @@ from src.train_model import train
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def run_experiment(model_name: str, dataset_id: int, epochs: int) -> int:
+def run_experiment(model_name: str, dataset_id: int, epochs: int) -> float:
     train_config, eval_config = {
         'ebr': config.ebr_config,
         'naive': config.naive_config,
@@ -33,7 +33,7 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int) -> int:
     train(train_config)
 
     logger.info('Evaluate model')
-    map_score, ndcg_score = evaluate(eval_config)
+    ndcg_score = evaluate(eval_config)
     return ndcg_score
 
 
@@ -95,8 +95,10 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
 
     results = []
     for dataset_id in dataset_ids:
+        logger.info(f'Run an experiment on {model_name} with dataset: {dataset_id}')
         ndcg_score = run_experiment(model_name, dataset_id, epochs)
         results.append({
+            'dataset_id': dataset_id,
             'model': model_name,
             'NDCG': ndcg_score,
         })
