@@ -45,7 +45,7 @@ def train(config: TrainConfig):
     logger.info('Train model')
     log_dir = f'{project_dir}/logs/fit/{model.name}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}'
     callbacks = [
-        tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
+        # tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1),
         tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=2)
     ]
     history = model.fit(
