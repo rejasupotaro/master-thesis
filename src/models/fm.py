@@ -15,7 +15,6 @@ class FMQuery(BaseModel):
 
     def build(self):
         categorical_input_size = {
-            'author': self.total_authors,
             'country': self.total_countries,
         }
 
@@ -23,9 +22,8 @@ class FMQuery(BaseModel):
         title_input = self.new_title_input()
         ingredients_input = self.new_ingredients_input()
         description_input = self.new_description_input()
-        author_input = self.new_author_input()
         country_input = self.new_country_input()
-        inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
+        inputs = [query_input, title_input, ingredients_input, description_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
         query = layers.GlobalMaxPooling1D()(embedding(query_input))
@@ -33,9 +31,6 @@ class FMQuery(BaseModel):
         ingredients = layers.GlobalMaxPooling1D()(embedding(ingredients_input))
         description = layers.GlobalMaxPooling1D()(embedding(description_input))
 
-        embedding = layers.Embedding(categorical_input_size['author'], self.embedding_dim)
-        author = embedding(author_input)
-        author = tf.reshape(author, shape=(-1, self.embedding_dim,))
         embedding = layers.Embedding(categorical_input_size['country'], self.embedding_dim)
         country = embedding(country_input)
         country = tf.reshape(country, shape=(-1, self.embedding_dim,))
@@ -43,9 +38,8 @@ class FMQuery(BaseModel):
         query_title = layers.Dot(axes=1)([query, title])
         query_ingredients = layers.Dot(axes=1)([query, ingredients])
         query_description = layers.Dot(axes=1)([query, description])
-        query_author = layers.Dot(axes=1)([query, author])
         query_country = layers.Dot(axes=1)([query, country])
-        interactions = layers.Add()([query_title, query_ingredients, query_description, query_author, query_country])
+        interactions = layers.Add()([query_title, query_ingredients, query_description, query_country])
 
         embedding = layers.Embedding(self.total_words, 1)
         query = layers.GlobalMaxPooling1D()(embedding(query_input))
@@ -53,13 +47,10 @@ class FMQuery(BaseModel):
         ingredients = layers.GlobalMaxPooling1D()(embedding(ingredients_input))
         description = layers.GlobalMaxPooling1D()(embedding(description_input))
 
-        embedding = layers.Embedding(categorical_input_size['author'], 1)
-        author = embedding(author_input)
-        author = tf.reshape(author, shape=(-1, 1))
         embedding = layers.Embedding(categorical_input_size['country'], 1)
         country = embedding(country_input)
         country = tf.reshape(country, shape=(-1, 1))
-        biases = layers.Add()([query, title, ingredients, description, author, country])
+        biases = layers.Add()([query, title, ingredients, description, country])
         biases = AddBias0()(biases)
 
         output = layers.Activation('sigmoid', name='label')(biases + interactions)
@@ -73,7 +64,6 @@ class FMAll(BaseModel):
 
     def build(self):
         categorical_input_size = {
-            'author': self.total_authors,
             'country': self.total_countries,
         }
 
@@ -84,7 +74,6 @@ class FMAll(BaseModel):
             self.new_description_input(),
         ]
         categorical_inputs = [
-            self.new_author_input(),
             self.new_country_input(),
         ]
         inputs = text_inputs + categorical_inputs

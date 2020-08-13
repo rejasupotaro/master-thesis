@@ -11,7 +11,6 @@ class Attention(BaseModel):
 
     def build(self):
         categorical_input_size = {
-            'author': self.total_authors,
             'country': self.total_countries,
         }
 
@@ -22,7 +21,6 @@ class Attention(BaseModel):
             self.new_description_input(),
         ]
         categorical_inputs = [
-            self.new_author_input(),
             self.new_country_input(),
         ]
         inputs = text_inputs + categorical_inputs

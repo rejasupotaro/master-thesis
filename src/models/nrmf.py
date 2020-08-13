@@ -22,16 +22,14 @@ class NRMF(BaseModel):
         title_input = self.new_title_input()
         ingredients_input = keras.Input(shape=(n_ingredients, ingredient_len,), name='ingredients')
         description_input = self.new_description_input()
-        author_input = self.new_author_input()
         country_input = self.new_country_input()
-        inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
+        inputs = [query_input, title_input, ingredients_input, description_input, country_input]
 
         embedding = layers.Embedding(self.total_words, embedding_dim, mask_zero=True)
         query = embedding(query_input)
         title = embedding(title_input)
         ingredients = embedding(ingredients_input)
         description = embedding(description_input)
-        author = layers.Embedding(self.total_authors, embedding_dim)(author_input)
         country = layers.Embedding(self.total_countries, embedding_dim)(country_input)
 
         query = layers.Conv1D(embedding_dim, n_gram, activation='relu')(query)
@@ -45,20 +43,17 @@ class NRMF(BaseModel):
         ingredients = layers.GlobalMaxPooling1D()(ingredients)
         description = layers.Conv1D(embedding_dim, n_gram, activation='relu')(description)
         description = layers.GlobalMaxPooling1D()(description)
-        author = tf.reshape(author, shape=(-1, embedding_dim,))
         country = tf.reshape(country, shape=(-1, embedding_dim,))
 
         query_title = tf.multiply(query, title)
         query_ingredients = tf.multiply(query, ingredients)
         query_description = tf.multiply(query, description)
-        query_author = tf.multiply(query, author)
         query_country = tf.multiply(query, country)
 
         x = layers.concatenate([
             query_title,
             query_ingredients,
             query_description,
-            query_author,
             query_country,
         ])
         x = layers.Dense(32, activation='relu')(x)
@@ -77,25 +72,22 @@ class NRMFSimpleQuery(BaseModel):
         title_input = self.new_title_input()
         ingredients_input = self.new_ingredients_input()
         description_input = self.new_description_input()
-        author_input = self.new_author_input()
         country_input = self.new_country_input()
-        inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
+        inputs = [query_input, title_input, ingredients_input, description_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
         query = embedding(query_input)
         title = embedding(title_input)
         ingredients = embedding(ingredients_input)
         description = embedding(description_input)
-        author = layers.Embedding(self.total_authors, self.embedding_dim)(author_input)
         country = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
 
         query = layers.GlobalMaxPooling1D()(query)
         title = layers.GlobalMaxPooling1D()(title)
         ingredients = layers.GlobalMaxPooling1D()(ingredients)
         description = layers.GlobalMaxPooling1D()(description)
-        author = tf.reshape(author, shape=(-1, self.embedding_dim))
         country = tf.reshape(country, shape=(-1, self.embedding_dim))
-        fields = [title, ingredients, description, author, country]
+        fields = [title, ingredients, description, country]
 
         interactions = []
         for field in fields:
@@ -118,25 +110,22 @@ class NRMFSimpleAll(BaseModel):
         title_input = self.new_title_input()
         ingredients_input = self.new_ingredients_input()
         description_input = self.new_description_input()
-        author_input = self.new_author_input()
         country_input = self.new_country_input()
-        inputs = [query_input, title_input, ingredients_input, description_input, author_input, country_input]
+        inputs = [query_input, title_input, ingredients_input, description_input, country_input]
 
         embedding = layers.Embedding(self.total_words, self.embedding_dim)
         query = embedding(query_input)
         title = embedding(title_input)
         ingredients = embedding(ingredients_input)
         description = embedding(description_input)
-        author = layers.Embedding(self.total_authors, self.embedding_dim)(author_input)
         country = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
 
         query = layers.GlobalMaxPooling1D()(query)
         title = layers.GlobalMaxPooling1D()(title)
         ingredients = layers.GlobalMaxPooling1D()(ingredients)
         description = layers.GlobalMaxPooling1D()(description)
-        author = tf.reshape(author, shape=(-1, self.embedding_dim))
         country = tf.reshape(country, shape=(-1, self.embedding_dim))
-        features = [query, title, ingredients, description, author, country]
+        features = [query, title, ingredients, description, country]
 
         interactions = []
         for feature1, feature2 in itertools.combinations(features, 2):
