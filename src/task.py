@@ -118,7 +118,7 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
                 bucket.upload(str(file), destination)
 
         for filepath in [
-            f'{project_dir}/logs/{model_name}_results.csv'
+            f'logs/{model_name}_results.csv'
         ]:
             source = f'{project_dir}/{filepath}'
             destination = filepath
