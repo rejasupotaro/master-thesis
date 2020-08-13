@@ -9,6 +9,7 @@ import mlflow
 import tensorflow as tf
 from loguru import logger
 from mlflow.tracking import MlflowClient
+from pandas import DataFrame
 
 from src import config
 from src.data.cloud_storage import CloudStorage
@@ -18,14 +19,32 @@ from src.train_model import train
 project_dir = Path(__file__).resolve().parents[1]
 
 
+def run_experiment(model_name: str, dataset_id: int, epochs: int) -> int:
+    train_config, eval_config = {
+        'ebr': config.ebr_config,
+        'naive': config.naive_config,
+        'nrmf_simple_query': config.nrmf_simple_query_config,
+        'nrmf_simple_all': config.nrmf_simple_all_config,
+        'fm_query': config.fm_query_config,
+        'fm_all': config.fm_all_config,
+    }[model_name](dataset_id, epochs)
+
+    logger.info('Train model')
+    train(train_config)
+
+    logger.info('Evaluate model')
+    map_score, ndcg_score = evaluate(eval_config)
+    return ndcg_score
+
+
 @click.command()
 @click.option('--job-dir', type=str)
 @click.option('--bucket-name', type=str)
 @click.option('--env', type=str)
-@click.option('--dataset-size', type=str)
+@click.option('--dataset-id', type=str)
 @click.option('--model-name', type=str)
 @click.option('--epochs', type=int)
-def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name: str, epochs: int):
+def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: str, epochs: int):
     logger.add(sys.stdout, format='{time} {level} {message}')
     log_filepath = f'{project_dir}/logs/{int(time())}.log'
     logger.add(log_filepath)
@@ -51,38 +70,39 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
     else:
         job_name = 'chief'
 
+    if '-' in dataset_id:
+        start, stop = [int(n) for n in dataset_id.split('-')]
+        dataset_ids = range(start, stop + 1)
+    else:
+        dataset_ids = [int(dataset_id)]
+
     if env == 'cloud':
         logger.info('Download data')
         bucket = CloudStorage(bucket_name)
         Path(f'{project_dir}/data/raw').mkdir(parents=True, exist_ok=True)
         Path(f'{project_dir}/data/processed').mkdir(parents=True, exist_ok=True)
         Path(f'{project_dir}/models').mkdir(exist_ok=True)
-        for filepath in [
-            f'data/processed/recipes.{dataset_size}.pkl',
-            f'data/processed/listwise.{dataset_size}.train.pkl',
-            f'data/processed/listwise.{dataset_size}.val.pkl',
-        ]:
+        filepaths = []
+        for dataset_id in dataset_ids:
+            filepaths.append(f'data/processed/listwise.{dataset_id}.train.pkl')
+            filepaths.append(f'data/processed/listwise.{dataset_id}.val.pkl')
+        filepaths.append('data/raw/recipes.json')
+        for filepath in filepaths:
             source = filepath
             destination = f'{project_dir}/{source}'
             logger.info(f'Download {source} to {destination}')
             bucket.download(source, destination)
 
-    train_config, eval_config = {
-        'ebr': config.ebr_config,
-        'naive': config.naive_config,
-        'nrmf': config.nrmf_config,
-        'nrmf_simple_query': config.nrmf_simple_query_config,
-        'nrmf_simple_all': config.nrmf_simple_all_config,
-        'fm_query': config.fm_query_config,
-        'fm_all': config.fm_all_config,
-        'autoint_simple': config.autoint_simple_config,
-    }[model_name](dataset_size, epochs)
-
-    logger.info('Train model')
-    train(train_config)
-
-    logger.info('Evaluate model')
-    evaluate(eval_config)
+    results = []
+    for dataset_id in dataset_ids:
+        ndcg_score = run_experiment(model_name, dataset_id, epochs)
+        results.append({
+            'model': model_name,
+            'NDCG': ndcg_score,
+        })
+    results_df = DataFrame(results)
+    logger.info(results_df)
+    results_df.to_csv(f'{project_dir}/logs/{model_name}_results.csv', index=False)
 
     mlflow.log_artifact(log_filepath)
     if env == 'cloud' and job_name == 'chief':
@@ -94,6 +114,14 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_size: str, model_name
                 filename = str(file)[len(base_filepath) + 1:]
                 destination = f'logs/mlruns/{experiment_id}/{filename}'
                 bucket.upload(str(file), destination)
+
+        for filepath in [
+            f'{project_dir}/logs/{model_name}_results.csv'
+        ]:
+            source = f'{project_dir}/{filepath}'
+            destination = filepath
+            logger.info(f'Upload {source} to {destination}')
+            bucket.upload(source, destination)
 
     mlflow.end_run()
     logger.info('Done')

@@ -64,3 +64,5 @@ def evaluate(config: EvalConfig):
     logger.info(f'MAP: {map_score}, NDCG: {ndcg_score}')
     mlflow.log_metric('MAP', map_score)
     mlflow.log_metric('NDCG', ndcg_score)
+
+    return map_score, ndcg_score
