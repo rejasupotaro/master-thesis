@@ -7,10 +7,8 @@ from time import time
 from typing import Dict
 
 import click
-import mlflow
 import tensorflow as tf
 from loguru import logger
-from mlflow.tracking import MlflowClient
 from pandas import DataFrame
 
 from src import config
@@ -35,12 +33,10 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, recipes: Dict)
     }[model_name](dataset_id, epochs, data_processor)
 
     logger.info('Train model')
-    # mlflow.log_params(asdict(config))
     train(train_config)
 
     logger.info('Evaluate model')
     ndcg_score = evaluate(eval_config)
-    # mlflow.log_metric('NDCG', ndcg_score)
     return ndcg_score
 
 
@@ -55,14 +51,6 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
     logger.add(sys.stdout, format='{time} {level} {message}')
     log_filepath = f'{project_dir}/logs/{int(time())}.log'
     logger.add(log_filepath)
-    mlflow.set_tracking_uri(f'{project_dir}/logs/mlruns')
-    mlflow.start_run()
-    client = MlflowClient()
-    experiments = client.list_experiments()
-    experiment_id = experiments[0].experiment_id
-    run = client.create_run(experiment_id)  # returns mlflow.entities.Run
-    run_id = run.info.run_id
-    logger.info(f'experiment_id: {experiment_id}, run_id: {run_id}')
 
     if env == 'cloud':
         tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
@@ -118,16 +106,6 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
     results_df.to_csv(f'{project_dir}/logs/{model_name}_results.csv', index=False)
 
     if env == 'cloud' and job_name == 'chief':
-        # mlflow.log_artifact(log_filepath)
-        # logger.info('Upload results')
-        # bucket = CloudStorage(bucket_name)
-        # base_filepath = f'{project_dir}/logs/mlruns/{experiment_id}'
-        # for file in Path(base_filepath).rglob('*'):
-        #     if file.is_file():
-        #         filename = str(file)[len(base_filepath) + 1:]
-        #         destination = f'logs/mlruns/{experiment_id}/{filename}'
-        #         bucket.upload(str(file), destination)
-
         for filepath in [
             f'logs/{model_name}_results.csv'
         ]:
@@ -136,7 +114,6 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
             logger.info(f'Upload {source} to {destination}')
             bucket.upload(source, destination)
 
-    mlflow.end_run()
     logger.info('Done')
 
 

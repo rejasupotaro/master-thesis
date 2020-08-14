@@ -51,11 +51,7 @@ def train(config: TrainConfig):
         callbacks=callbacks,
         verbose=config.verbose,
     )
-
     logger.info(history.history)
-    # for metric in history.history:
-    #     for i, value in enumerate(history.history[metric]):
-    #         mlflow.log_metric(metric, value, step=i)
 
     logger.info('Save model')
     model.save(f'{project_dir}/models/{model.name}.h5')
