@@ -1,3 +1,4 @@
+import gc
 import json
 import os
 import sys
@@ -30,10 +31,12 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int) -> float:
     }[model_name](dataset_id, epochs)
 
     logger.info('Train model')
+    # mlflow.log_params(asdict(config))
     train(train_config)
 
     logger.info('Evaluate model')
     ndcg_score = evaluate(eval_config)
+    # mlflow.log_metric('NDCG', ndcg_score)
     return ndcg_score
 
 
@@ -102,20 +105,21 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
             'model': model_name,
             'NDCG': ndcg_score,
         })
+        gc.collect()
     results_df = DataFrame(results)
     logger.info(results_df)
     results_df.to_csv(f'{project_dir}/logs/{model_name}_results.csv', index=False)
 
-    mlflow.log_artifact(log_filepath)
     if env == 'cloud' and job_name == 'chief':
-        logger.info('Upload results')
-        bucket = CloudStorage(bucket_name)
-        base_filepath = f'{project_dir}/logs/mlruns/{experiment_id}'
-        for file in Path(base_filepath).rglob('*'):
-            if file.is_file():
-                filename = str(file)[len(base_filepath) + 1:]
-                destination = f'logs/mlruns/{experiment_id}/{filename}'
-                bucket.upload(str(file), destination)
+        # mlflow.log_artifact(log_filepath)
+        # logger.info('Upload results')
+        # bucket = CloudStorage(bucket_name)
+        # base_filepath = f'{project_dir}/logs/mlruns/{experiment_id}'
+        # for file in Path(base_filepath).rglob('*'):
+        #     if file.is_file():
+        #         filename = str(file)[len(base_filepath) + 1:]
+        #         destination = f'logs/mlruns/{experiment_id}/{filename}'
+        #         bucket.upload(str(file), destination)
 
         for filepath in [
             f'logs/{model_name}_results.csv'

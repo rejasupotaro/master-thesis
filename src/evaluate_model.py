@@ -1,7 +1,6 @@
 import pickle
 from pathlib import Path
 
-import mlflow
 import numpy as np
 import tensorflow as tf
 from loguru import logger
@@ -59,6 +58,5 @@ def evaluate(config: EvalConfig) -> float:
     logger.info('Predict')
     ndcg_score = predict(model, val_dataset, data_processor, config.verbose)
     logger.info(f'NDCG: {ndcg_score}')
-    mlflow.log_metric('NDCG', ndcg_score)
 
     return ndcg_score

@@ -1,9 +1,7 @@
 import datetime
 import pickle
-from dataclasses import asdict
 from pathlib import Path
 
-import mlflow
 import tensorflow as tf
 from loguru import logger
 from tensorflow import keras
@@ -20,8 +18,6 @@ project_dir = Path(__file__).resolve().parents[1]
 
 
 def train(config: TrainConfig):
-    mlflow.log_params(asdict(config))
-
     logger.info('Transform examples into dataset')
     data_processor = config.data_processor
 
@@ -30,8 +26,8 @@ def train(config: TrainConfig):
     data_processor.fit(train_df)
     with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'wb') as file:
         pickle.dump(data_processor, file)
-    train_generator = DataGenerator(train_df, data_processor)
-    val_generator = DataGenerator(val_df, data_processor)
+    train_generator = DataGenerator(train_df, data_processor, batch_size=1024)
+    val_generator = DataGenerator(val_df, data_processor, batch_size=1024)
 
     logger.info('Build model')
     model = config.model(data_processor).build()
@@ -57,9 +53,9 @@ def train(config: TrainConfig):
     )
 
     logger.info(history.history)
-    for metric in history.history:
-        for i, value in enumerate(history.history[metric]):
-            mlflow.log_metric(metric, value, step=i)
+    # for metric in history.history:
+    #     for i, value in enumerate(history.history[metric]):
+    #         mlflow.log_metric(metric, value, step=i)
 
     logger.info('Save model')
     model.save(f'{project_dir}/models/{model.name}.h5')
