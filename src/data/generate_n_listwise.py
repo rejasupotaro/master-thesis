@@ -74,7 +74,7 @@ def generate_listwise(i: int, interactions_df: DataFrame, recipes: Dict, train: 
     return len(dataset)
 
 
-def generate(n_splits: int = 8, frac: float = 0.7, train_size: float = 0.75):
+def generate(n_splits: int = 10, frac: float = 0.6, train_size: float = 0.75):
     """Generate listwise JSON from interctions.csv
     The JSON format is like below.
     [
@@ -126,14 +126,16 @@ def generate(n_splits: int = 8, frac: float = 0.7, train_size: float = 0.75):
     dataset_size_df = DataFrame(rows)
     logger.info(dataset_size_df)
     # i  train  val
-    # 0  45254  21103
-    # 1  43009  20967
-    # 2  46932  20424
-    # 3  47038  21577
-    # 4  46904  21078
-    # 5  43968  19297
-    # 6  40617  20370
-    # 7  47304  19475
+    # 0  34030  15533
+    # 1  33038  15441
+    # 2  32410  15374
+    # 3  34979  15927
+    # 4  34519  15798
+    # 5  33413  15573
+    # 6  32124  15956
+    # 7  32812  14153
+    # 8  31042  12127
+    # 9  34845  14748
     logger.info('Done')
 
 
