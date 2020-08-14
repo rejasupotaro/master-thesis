@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 from time import time
-from typing import Dict
+from typing import Dict, Tuple
 
 import click
 import tensorflow as tf
@@ -21,7 +21,7 @@ from src.train_model import train
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def run_experiment(model_name: str, dataset_id: int, epochs: int, recipes: Dict) -> float:
+def run_experiment(model_name: str, dataset_id: int, epochs: int, batch_size: int, recipes: Dict) -> Tuple[Dict, float]:
     data_processor = ConcatDataProcessor(recipes)
     train_config, eval_config = {
         'ebr': config.ebr_config,
@@ -33,11 +33,11 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, recipes: Dict)
     }[model_name](dataset_id, epochs, data_processor)
 
     logger.info('Train model')
-    train(train_config)
+    history = train(train_config, batch_size)
 
     logger.info('Evaluate model')
     ndcg_score = evaluate(eval_config)
-    return ndcg_score
+    return history, ndcg_score
 
 
 @click.command()
@@ -47,7 +47,8 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, recipes: Dict)
 @click.option('--dataset-id', type=str)
 @click.option('--model-name', type=str)
 @click.option('--epochs', type=int)
-def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: str, epochs: int):
+@click.option('--batch-size', type=int)
+def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: str, epochs: int, batch_size: int):
     logger.add(sys.stdout, format='{time} {level} {message}')
     log_filepath = f'{project_dir}/logs/{int(time())}.log'
     logger.add(log_filepath)
@@ -94,11 +95,12 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
     results = []
     for dataset_id in dataset_ids:
         logger.info(f'Run an experiment on {model_name} with dataset: {dataset_id}')
-        ndcg_score = run_experiment(model_name, dataset_id, epochs, recipes)
+        history, ndcg_score = run_experiment(model_name, dataset_id, epochs, batch_size, recipes)
         results.append({
             'dataset_id': dataset_id,
             'model': model_name,
-            'NDCG': ndcg_score,
+            'val_loss': history['val_loss'][-1],
+            'ndcg': ndcg_score,
         })
         gc.collect()
     results_df = DataFrame(results)

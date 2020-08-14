@@ -1,6 +1,7 @@
 import datetime
 import pickle
 from pathlib import Path
+from typing import Dict
 
 import tensorflow as tf
 from loguru import logger
@@ -17,7 +18,11 @@ project_dir = Path(__file__).resolve().parents[1]
 # tf.keras.mixed_precision.experimental.set_policy('mixed_float16')
 
 
-def train(config: TrainConfig):
+def train(config: TrainConfig, batch_size: int) -> Dict:
+    """
+    Returns JSON consisting of key: metric and value: list of values
+    e.g. {'loss': [1], 'accuracy': [1], 'val_loss': [1], 'val_accuracy': [1]}
+    """
     logger.info('Transform examples into dataset')
     data_processor = config.data_processor
 
@@ -26,8 +31,8 @@ def train(config: TrainConfig):
     data_processor.fit(train_df)
     with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'wb') as file:
         pickle.dump(data_processor, file)
-    train_generator = DataGenerator(train_df, data_processor, batch_size=1024)
-    val_generator = DataGenerator(val_df, data_processor, batch_size=1024)
+    train_generator = DataGenerator(train_df, data_processor, batch_size=batch_size)
+    val_generator = DataGenerator(val_df, data_processor, batch_size=batch_size)
 
     logger.info('Build model')
     model = config.model(data_processor).build()
@@ -51,9 +56,8 @@ def train(config: TrainConfig):
         callbacks=callbacks,
         verbose=config.verbose,
     )
-    logger.info(history.history)
 
     logger.info('Save model')
     model.save(f'{project_dir}/models/{model.name}.h5')
 
-    logger.info('Done')
+    return history.history
