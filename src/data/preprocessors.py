@@ -14,11 +14,14 @@ from src.data.recipes import load_recipes, load_raw_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, dataset_size: str = None, num_words: int = 200000, max_negatives: int = 10):
-        if dataset_size:
-            self.recipes = load_recipes(dataset_size)
+    def __init__(self, recipes: Dict = None, dataset_size: str = None, num_words: int = 200000, max_negatives: int = 10):
+        if not recipes:
+            if dataset_size:
+                self.recipes = load_recipes(dataset_size)
+            else:
+                self.recipes = load_raw_recipes()
         else:
-            self.recipes = load_raw_recipes()
+            self.recipes = recipes
         self.num_words: int = num_words
         self.tokenizer: Optional[Tokenizer] = None
         self.encoder: Dict[str, LabelEncoder] = {}

@@ -25,10 +25,12 @@ class EvalConfig:
     verbose: int = 1
 
 
-def ebr_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def ebr_config(dataset_id: int, epochs: int, data_processor: DataProcessor) -> Tuple[TrainConfig, EvalConfig]:
+    if not data_processor:
+        data_processor = ConcatDataProcessor()
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_id}',
-        data_processor=ConcatDataProcessor(),
+        data_processor=data_processor,
         data_processor_filename=f'concat_data_processor.{dataset_id}',
         model=representation.EBR,
         epochs=epochs,
@@ -43,10 +45,12 @@ def ebr_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
     return train_config, eval_config
 
 
-def naive_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def naive_config(dataset_id: int, epochs: int, data_processor: DataProcessor) -> Tuple[TrainConfig, EvalConfig]:
+    if not data_processor:
+        data_processor = ConcatDataProcessor()
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_id}',
-        data_processor=ConcatDataProcessor(),
+        data_processor=data_processor,
         data_processor_filename=f'concat_data_processor.{dataset_id}',
         model=naive.Naive,
         epochs=epochs,
@@ -61,10 +65,13 @@ def naive_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]
     return train_config, eval_config
 
 
-def nrmf_simple_query_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def nrmf_simple_query_config(dataset_id: int, epochs: int, data_processor: DataProcessor) -> Tuple[
+    TrainConfig, EvalConfig]:
+    if not data_processor:
+        data_processor = ConcatDataProcessor()
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_id}',
-        data_processor=ConcatDataProcessor(),
+        data_processor=data_processor,
         data_processor_filename=f'concat_data_processor.{dataset_id}',
         model=nrmf.NRMFSimpleQuery,
         epochs=epochs,
@@ -79,10 +86,12 @@ def nrmf_simple_query_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig,
     return train_config, eval_config
 
 
-def nrmf_simple_all_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def nrmf_simple_all_config(dataset_id: int, epochs: int, data_processor) -> Tuple[TrainConfig, EvalConfig]:
+    if not data_processor:
+        data_processor = ConcatDataProcessor()
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_id}',
-        data_processor=ConcatDataProcessor(),
+        data_processor=data_processor,
         data_processor_filename=f'concat_data_processor.{dataset_id}',
         model=nrmf.NRMFSimpleAll,
         epochs=epochs,
@@ -97,10 +106,12 @@ def nrmf_simple_all_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, E
     return train_config, eval_config
 
 
-def fm_query_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def fm_query_config(dataset_id: int, epochs: int, data_processor: DataProcessor) -> Tuple[TrainConfig, EvalConfig]:
+    if not data_processor:
+        data_processor = ConcatDataProcessor()
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_id}',
-        data_processor=ConcatDataProcessor(),
+        data_processor=data_processor,
         data_processor_filename=f'concat_data_processor.{dataset_id}',
         model=fm.FMQuery,
         epochs=epochs,
@@ -115,10 +126,12 @@ def fm_query_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConf
     return train_config, eval_config
 
 
-def fm_all_config(dataset_id: int, epochs: int) -> Tuple[TrainConfig, EvalConfig]:
+def fm_all_config(dataset_id: int, epochs: int, data_processor: DataProcessor) -> Tuple[TrainConfig, EvalConfig]:
+    if not data_processor:
+        data_processor = ConcatDataProcessor()
     train_config = TrainConfig(
         dataset=f'listwise.{dataset_id}',
-        data_processor=ConcatDataProcessor(),
+        data_processor=data_processor,
         data_processor_filename=f'concat_data_processor.{dataset_id}',
         model=fm.FMAll,
         epochs=epochs,

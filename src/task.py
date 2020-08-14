@@ -4,6 +4,7 @@ import os
 import sys
 from pathlib import Path
 from time import time
+from typing import Dict
 
 import click
 import mlflow
@@ -14,13 +15,16 @@ from pandas import DataFrame
 
 from src import config
 from src.data.cloud_storage import CloudStorage
+from src.data.preprocessors import ConcatDataProcessor
+from src.data.recipes import load_raw_recipes
 from src.evaluate_model import evaluate
 from src.train_model import train
 
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def run_experiment(model_name: str, dataset_id: int, epochs: int) -> float:
+def run_experiment(model_name: str, dataset_id: int, epochs: int, recipes: Dict) -> float:
+    data_processor = ConcatDataProcessor(recipes)
     train_config, eval_config = {
         'ebr': config.ebr_config,
         'naive': config.naive_config,
@@ -28,7 +32,7 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int) -> float:
         'nrmf_simple_all': config.nrmf_simple_all_config,
         'fm_query': config.fm_query_config,
         'fm_all': config.fm_all_config,
-    }[model_name](dataset_id, epochs)
+    }[model_name](dataset_id, epochs, data_processor)
 
     logger.info('Train model')
     # mlflow.log_params(asdict(config))
@@ -96,10 +100,13 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
             logger.info(f'Download {source} to {destination}')
             bucket.download(source, destination)
 
+    logger.info(f'Load recipes')
+    recipes = load_raw_recipes()
+
     results = []
     for dataset_id in dataset_ids:
         logger.info(f'Run an experiment on {model_name} with dataset: {dataset_id}')
-        ndcg_score = run_experiment(model_name, dataset_id, epochs)
+        ndcg_score = run_experiment(model_name, dataset_id, epochs, recipes)
         results.append({
             'dataset_id': dataset_id,
             'model': model_name,
