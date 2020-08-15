@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 
 from src.layers.bias import AddBias0
-from src.layers.interaction import WeightedInteraction
+from src.layers.interaction import WeightedQueryFieldInteraction, WeightedFeatureInteraction
 from src.models.base_model import BaseModel
 
 
@@ -112,7 +112,7 @@ class FwFMQuery(BaseModel):
 
         num_fields = len(input_features)
         features = tf.concat(input_features, axis=1)
-        interactions = WeightedInteraction(num_fields, name='field_weights')(features)
+        interactions = WeightedQueryFieldInteraction(num_fields, name='field_weights')(features)
 
         features = []
         for feature in input_features:
@@ -150,7 +150,7 @@ class FwFMAll(BaseModel):
 
         num_fields = len(input_features)
         features = tf.concat(input_features, axis=1)
-        interactions = WeightedInteraction(num_fields, name='field_weights')(features)
+        interactions = WeightedFeatureInteraction(num_fields, name='field_weights')(features)
 
         features = []
         for feature in input_features:

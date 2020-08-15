@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from src.config import EvalConfig
 from src.layers.bias import AddBias0
+from src.layers.interaction import WeightedQueryFieldInteraction, WeightedFeatureInteraction
 from src.losses import pairwise_losses
 from src.metrics import metrics
 
@@ -45,6 +46,8 @@ def evaluate(config: EvalConfig) -> float:
     filepath = f'{project_dir}/models/{config.model_name}.h5'
     custom_objects = {
         'cross_entropy_loss': pairwise_losses.cross_entropy_loss,
+        'WeightedQueryFieldInteraction': WeightedQueryFieldInteraction,
+        'WeightedFeatureInteraction': WeightedFeatureInteraction,
         'AddBias0': AddBias0,
     }
     model = keras.models.load_model(filepath, custom_objects=custom_objects)
