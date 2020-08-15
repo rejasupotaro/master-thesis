@@ -30,7 +30,6 @@ class FMQuery(BaseModel):
         title = layers.GlobalMaxPooling1D()(word_embedding(title_input))
         ingredients = layers.GlobalMaxPooling1D()(word_embedding(ingredients_input))
         description = layers.GlobalMaxPooling1D()(word_embedding(description_input))
-
         country_embedding = layers.Embedding(categorical_input_size['country'], self.embedding_dim)
         country = country_embedding(country_input)
         country = tf.reshape(country, shape=(-1, self.embedding_dim,))
@@ -41,15 +40,11 @@ class FMQuery(BaseModel):
         query_country = layers.Dot(axes=1)([query, country])
         interactions = layers.Add()([query_title, query_ingredients, query_description, query_country])
 
-        embedding = layers.Embedding(self.total_words, 1)
-        query = layers.GlobalMaxPooling1D()(embedding(query_input))
-        title = layers.GlobalMaxPooling1D()(embedding(title_input))
-        ingredients = layers.GlobalMaxPooling1D()(embedding(ingredients_input))
-        description = layers.GlobalMaxPooling1D()(embedding(description_input))
-
-        embedding = layers.Embedding(categorical_input_size['country'], 1)
-        country = embedding(country_input)
-        country = tf.reshape(country, shape=(-1, 1))
+        query = layers.Dense(1, activation='relu')(query)
+        title = layers.Dense(1, activation='relu')(title)
+        ingredients = layers.Dense(1, activation='relu')(ingredients)
+        description = layers.Dense(1, activation='relu')(description)
+        country = layers.Dense(1, activation='relu')(country)
         features = layers.Add()([query, title, ingredients, description, country])
         features = AddBias0()(features)
 
@@ -63,47 +58,31 @@ class FMAll(BaseModel):
         return 'fm_all'
 
     def build(self):
-        categorical_input_size = {
-            'country': self.total_countries,
-        }
-
         text_inputs = [
             self.new_query_input(),
             self.new_title_input(),
             self.new_ingredients_input(),
             self.new_description_input(),
         ]
-        categorical_inputs = [
-            self.new_country_input(),
-        ]
-        inputs = text_inputs + categorical_inputs
+        country_input = self.new_country_input()
+        inputs = text_inputs + [country_input]
 
         word_embedding = layers.Embedding(self.total_words, self.embedding_dim)
         text_features = [word_embedding(text_input) for text_input in text_inputs]
         text_features = [layers.GlobalMaxPooling1D()(feature) for feature in text_features]
-
-        categorical_features = []
-        for name, categorical_input in zip(categorical_input_size, categorical_inputs):
-            category_embedding = layers.Embedding(categorical_input_size[name], self.embedding_dim)
-            feature = category_embedding(categorical_input)
-            feature = tf.reshape(feature, shape=(-1, self.embedding_dim,))
-            categorical_features.append(feature)
-
-        features = text_features + categorical_features
+        country_embedding = layers.Embedding(self.total_countries, self.embedding_dim)
+        country = country_embedding(country_input)
+        country = tf.reshape(country, shape=(-1, self.embedding_dim,))
+        input_features = text_features + [country]
 
         interactions = []
-        for feature1, feature2 in itertools.combinations(features, 2):
+        for feature1, feature2 in itertools.combinations(input_features, 2):
             interactions.append(layers.Dot(axes=1)([feature1, feature2]))
         interactions = layers.Add()(interactions)
 
         features = []
-        for feature in text_inputs:
-            feature = layers.Embedding(self.total_words, 1)(feature)
-            feature = layers.GlobalMaxPooling1D()(feature)
-            features.append(feature)
-        for name, feature in zip(categorical_input_size, categorical_inputs):
-            feature = layers.Embedding(categorical_input_size[name], 1)(feature)
-            feature = tf.reshape(feature, shape=(-1, 1))
+        for feature in input_features:
+            feature = layers.Dense(1, activation='relu')(feature)
             features.append(feature)
         features = layers.Add()(features)
         features = AddBias0()(features)
@@ -118,47 +97,30 @@ class FwFM(BaseModel):
         return 'fwfm_all'
 
     def build(self):
-        categorical_input_size = {
-            'country': self.total_countries,
-        }
-
         text_inputs = [
             self.new_query_input(),
             self.new_title_input(),
             self.new_ingredients_input(),
             self.new_description_input(),
         ]
-        categorical_inputs = [
-            self.new_country_input(),
-        ]
-
-        inputs = text_inputs + categorical_inputs
+        country_input = self.new_country_input()
+        inputs = text_inputs + [country_input]
 
         word_embedding = layers.Embedding(self.total_words, self.embedding_dim, name='text_embedding')
         text_features = [word_embedding(text_input) for text_input in text_inputs]
         text_features = [layers.GlobalMaxPooling1D()(feature) for feature in text_features]
+        country_embedding = layers.Embedding(self.total_countries, self.embedding_dim)
+        country = country_embedding(country_input)
+        country = tf.reshape(country, shape=(-1, self.embedding_dim,))
+        input_features = text_features + [country]
 
-        categorical_features = []
-        for name, categorical_input in zip(categorical_input_size, categorical_inputs):
-            category_embedding = layers.Embedding(categorical_input_size[name], self.embedding_dim)
-            feature = category_embedding(categorical_input)
-            feature = tf.reshape(feature, shape=(-1, self.embedding_dim,))
-            categorical_features.append(feature)
-
-        features = text_features + categorical_features
-
-        num_fields = len(features)
-        features = tf.concat(features, axis=1)
+        num_fields = len(input_features)
+        features = tf.concat(input_features, axis=1)
         interactions = WeightedInteraction(num_fields, name='field_weights')(features)
 
         features = []
-        for feature in text_inputs:
-            feature = layers.Embedding(self.total_words, 1)(feature)
-            feature = layers.GlobalMaxPooling1D()(feature)
-            features.append(feature)
-        for name, feature in zip(categorical_input_size, categorical_inputs):
-            feature = layers.Embedding(categorical_input_size[name], 1)(feature)
-            feature = tf.reshape(feature, shape=(-1, 1))
+        for feature in input_features:
+            feature = layers.Dense(1, activation='relu')(feature)
             features.append(feature)
         features = layers.Add()(features)
         features = AddBias0()(features)
