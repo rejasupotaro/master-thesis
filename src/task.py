@@ -30,6 +30,7 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, batch_size: in
         'nrmf_simple_all': config.nrmf_simple_all_config,
         'fwfm_query': config.fwfm_query_config,
         'fwfm_all': config.fwfm_all_config,
+        'fwfm_selected': config.fwfm_selected_config,
     }[model_name](dataset_id, epochs, data_processor)
 
     logger.info('Train model')

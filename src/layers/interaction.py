@@ -70,3 +70,47 @@ class WeightedFeatureInteraction(tf.keras.layers.Layer):
             'num_fields': self.num_fields,
         })
         return config
+
+
+class WeightedSelectedFeatureInteraction(tf.keras.layers.Layer):
+    def __init__(self, num_fields, **kwargs):
+        self.num_fields = num_fields
+        super(WeightedSelectedFeatureInteraction, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        w_init = tf.constant_initializer(value=0)
+        self.field_weights = tf.Variable(
+            initial_value=w_init(shape=(self.num_fields - 1), dtype=tf.float32),
+        )
+        super(WeightedSelectedFeatureInteraction, self).build(input_shape)
+
+    def interaction(self, f1, f2, i):
+        interaction = layers.Dot(axes=1)([f1, f2])
+        return tf.math.scalar_mul(self.field_weights[i], interaction)
+
+    def call(self, inputs, **kwargs):
+        dim = inputs.shape[1] // self.num_fields
+        query = inputs[:, 0:dim]
+        title = inputs[:, 1 * dim:2 * dim]
+        ingredients = inputs[:, 2 * dim:3 * dim]
+        description = inputs[:, 3 * dim:4 * dim]
+        country = inputs[:, 4 * dim:5 * dim]
+
+        interactions = [
+            self.interaction(title, country, 0),
+            self.interaction(title, ingredients, 0),
+            self.interaction(query, title, 0),
+            self.interaction(ingredients, country, 0),
+        ]
+        interactions = layers.Add()(interactions)
+        return interactions
+
+    def compute_output_shape(self, input_shape):
+        return None, 1
+
+    def get_config(self):
+        config = super(WeightedSelectedFeatureInteraction, self).get_config().copy()
+        config.update({
+            'num_fields': self.num_fields,
+        })
+        return config
