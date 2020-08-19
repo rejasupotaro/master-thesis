@@ -28,9 +28,11 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, batch_size: in
         'naive': config.naive_config,
         'nrmf_simple_query': config.nrmf_simple_query_config,
         'nrmf_simple_all': config.nrmf_simple_all_config,
+        'nrmf_simple_query_with_1st': config.nrmf_simple_query_with_1st_config,
         'fwfm_query': config.fwfm_query_config,
         'fwfm_all': config.fwfm_all_config,
         'fwfm_selected': config.fwfm_selected_config,
+        'fwfm_all_without_1st': config.fwfm_all_without_1st_config,
     }[model_name](dataset_id, epochs, data_processor)
 
     logger.info('Train model')

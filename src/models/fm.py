@@ -200,3 +200,34 @@ class FwFMSelected(BaseModel):
 
         output = layers.Activation('sigmoid', name='label')(features + interactions)
         return tf.keras.Model(inputs=inputs, outputs=output, name=self.name)
+
+
+class FwFMAllWithout1st(BaseModel):
+    @property
+    def name(self) -> str:
+        return 'fwfm_all_without_1st'
+
+    def build(self):
+        text_inputs = [
+            self.new_query_input(),
+            self.new_title_input(),
+            self.new_ingredients_input(),
+            self.new_description_input(),
+        ]
+        country_input = self.new_country_input()
+        inputs = text_inputs + [country_input]
+
+        word_embedding = layers.Embedding(self.total_words, self.embedding_dim, name='text_embedding')
+        text_features = [word_embedding(text_input) for text_input in text_inputs]
+        text_features = [layers.GlobalMaxPooling1D()(feature) for feature in text_features]
+        country_embedding = layers.Embedding(self.total_countries, self.embedding_dim)
+        country = country_embedding(country_input)
+        country = tf.reshape(country, shape=(-1, self.embedding_dim,))
+        input_features = text_features + [country]
+
+        num_fields = len(input_features)
+        features = tf.concat(input_features, axis=1)
+        interactions = WeightedFeatureInteraction(num_fields, name='field_weights')(features)
+
+        output = layers.Activation('sigmoid', name='label')(interactions)
+        return tf.keras.Model(inputs=inputs, outputs=output, name=self.name)

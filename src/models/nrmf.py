@@ -136,3 +136,44 @@ class NRMFSimpleAll(BaseModel):
         output = layers.Dense(1, activation='sigmoid', name='label')(x)
 
         return keras.Model(inputs=inputs, outputs=output, name=self.name)
+
+
+class NRMFSimpleQueryWith1st(BaseModel):
+    @property
+    def name(self):
+        return 'nrmf_simple_query_with_1st'
+
+    def build(self):
+        query_input = self.new_query_input()
+        title_input = self.new_title_input()
+        ingredients_input = self.new_ingredients_input()
+        description_input = self.new_description_input()
+        country_input = self.new_country_input()
+        inputs = [query_input, title_input, ingredients_input, description_input, country_input]
+
+        embedding = layers.Embedding(self.total_words, self.embedding_dim)
+        query = embedding(query_input)
+        title = embedding(title_input)
+        ingredients = embedding(ingredients_input)
+        description = embedding(description_input)
+        country = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
+
+        query = layers.GlobalMaxPooling1D()(query)
+        title = layers.GlobalMaxPooling1D()(title)
+        ingredients = layers.GlobalMaxPooling1D()(ingredients)
+        description = layers.GlobalMaxPooling1D()(description)
+        country = tf.reshape(country, shape=(-1, self.embedding_dim))
+        input_features = [query, title, ingredients, description, country]
+
+        features = []
+        for field in [title, ingredients, description, country]:
+            features.append(tf.multiply(query, field))
+        for feature in input_features:
+            feature = layers.Dense(1, activation='relu')(feature)
+            features.append(feature)
+
+        x = layers.concatenate(features)
+        x = layers.Dense(32, activation='relu')(x)
+        output = layers.Dense(1, activation='sigmoid', name='label')(x)
+
+        return keras.Model(inputs=inputs, outputs=output, name=self.name)
