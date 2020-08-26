@@ -4,15 +4,13 @@ This is a draft version of my thesis. It is planned to be completed by mid-Septe
 
 ## Abstract
 
-"Is a semi-structured document re-ranking task closer to a recommendation task rather than traditional document ranking?" I asked myself this question when I was working on a search system. Fortunately, I got an opportunity to examine it. In this thesis, I discuss how to design ranking models for modern search applications. I answer the following research questions through experiments.
+Single-field document ranking has long been a central topic in information retrieval, and many ranking models have been proposed in the history. However, little is known about multi-field document ranking. In this thesis, I discuss how to design ranking models for modern search applications.
+I hypothesized that semi-structured document ranking is located somewhere between single-field document ranking and recommendation. Therefore, I address the following research questions by comparing models in information retrieval and recommendation systems.
 
-- Is limiting feature interactions effective?
-  - The literature of information retrieval says that it is important to capture query-field interactions, whereas recommendation models do not usually distinguish item features and context features.
-  - They have the same goal: there are semi-structured complex items, given a context, find the optimal permutation. What makes them distinct?
-- How important are text matching signals in document ranking?
-  - If text matching signals are important, how critical it is?
-  - There must be other important interactions besides query-field interactions. Are text matching signals still more important than those?
-- Essentially, what learning to rank models learn?
+- **Is learning interaction important?** Interaction-based models are said to be better than representation-based models. To further discuss interaction strengths between query and fields, I assess the claim in a reliable way.
+- **Is limiting feature interactions effective?** Capturing query-field interactions is said to be important in information retrieval, whereas recommendation models do not usually distinguish item features and context features. They have the same goal: there are semi-structured complex items, given a context, find the optimal permutation. What makes them distinct?
+- **Does feeding first-order features contribute to effectiveness?** Feeding first-order features is said to increase the risk of overfitting, whereas recommendation models do not usually care about it.
+- **How important are text matching signals in document re-ranking?** In re-ranking tasks, candidates are already filtered based on lexical features. Could considering lexical features in the re-ranking stage be redundant? There must be other important interactions besides query-field interactions.
 
 My experiments show that ... (WIP)
 
