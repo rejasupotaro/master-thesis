@@ -42,7 +42,7 @@ def predict(model, dataset, data_processor, verbose=1) -> float:
     return ndcg_score
 
 
-def evaluate(config: EvalConfig) -> float:
+def evaluate_ranking_model(config: EvalConfig) -> float:
     logger.info('Load model')
     filepath = f'{project_dir}/models/{config.model_name}.h5'
     custom_objects = {

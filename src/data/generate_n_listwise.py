@@ -13,7 +13,6 @@ from tqdm import tqdm
 
 from src.data.queries import preprocess_query
 from src.data.recipes import load_raw_recipes
-from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[2]
 
@@ -137,8 +136,3 @@ def generate(n_splits: int = 10, frac: float = 0.6, train_size: float = 0.75):
     # 8  31042  12127
     # 9  34845  14748
     logger.info('Done')
-
-
-if __name__ == '__main__':
-    set_seed()
-    generate()

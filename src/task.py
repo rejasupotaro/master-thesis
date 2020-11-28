@@ -15,8 +15,8 @@ from src import config
 from src.data.cloud_storage import CloudStorage
 from src.data.preprocessors import ConcatDataProcessor
 from src.data.recipes import load_raw_recipes
-from src.evaluate_model import evaluate
-from src.train_model import train
+from src.evaluation import evaluate_ranking_model
+from src.training import train_ranking_model
 
 project_dir = Path(__file__).resolve().parents[1]
 
@@ -36,10 +36,10 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, batch_size: in
     }[model_name](dataset_id, epochs, data_processor)
 
     logger.info('Train model')
-    history = train(train_config, batch_size)
+    history = train_ranking_model(train_config, batch_size)
 
     logger.info('Evaluate model')
-    ndcg_score = evaluate(eval_config)
+    ndcg_score = evaluate_ranking_model(eval_config)
     return history, ndcg_score
 
 

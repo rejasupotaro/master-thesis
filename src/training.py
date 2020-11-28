@@ -18,7 +18,7 @@ project_dir = Path(__file__).resolve().parents[1]
 # tf.keras.mixed_precision.experimental.set_policy('mixed_float16')
 
 
-def train(config: TrainConfig, batch_size: int) -> Dict:
+def train_ranking_model(config: TrainConfig, batch_size: int) -> Dict:
     """
     Returns JSON consisting of key: metric and value: list of values
     e.g. {'loss': [1], 'accuracy': [1], 'val_loss': [1], 'val_accuracy': [1]}

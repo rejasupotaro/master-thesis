@@ -10,6 +10,7 @@ RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-
 ENV PATH="${PATH}:/root/.poetry/bin"
 
 COPY src src
+COPY tasks.py tasks.py
 
 RUN poetry install
 

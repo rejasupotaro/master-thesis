@@ -14,7 +14,6 @@ from tqdm import tqdm
 
 from src.data.queries import preprocess_query, get_popular_queries
 from src.data.recipes import load_raw_recipes
-from src.utils.seed import set_seed
 
 project_dir = Path(__file__).resolve().parents[2]
 
@@ -153,8 +152,3 @@ def generate(train_size: float = 0.8):
     generate_small(recipes, dataset, train_size)
 
     logger.info('Done')
-
-
-if __name__ == '__main__':
-    set_seed()
-    generate()

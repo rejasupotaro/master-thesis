@@ -18,8 +18,7 @@ Experiments are conducted using a proprietary dataset obtained from [Cookpad](ht
 ### Local
 
 ```
-$ poetry run python src/data/generate_listwise.py
-$ poetry run python src/models/train_model.py
+$ poetry run invoke generate-listwise
 ```
 
 ### Inside Container 
