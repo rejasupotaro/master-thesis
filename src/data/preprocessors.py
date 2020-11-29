@@ -1,9 +1,9 @@
 import abc
-import os
 import pickle
 from pathlib import Path
 from typing import Optional, Dict, Tuple, List
 
+import numpy as np
 from pandas import DataFrame
 from sklearn.preprocessing import LabelEncoder
 from tensorflow.keras.preprocessing.sequence import pad_sequences
@@ -14,18 +14,23 @@ from src.data.recipes import load_recipes, load_raw_recipes
 
 
 class DataProcessor(abc.ABC):
-    def __init__(self, recipes: Dict = None, dataset_size: str = None, num_words: int = 200000, max_negatives: int = 10):
-        if not recipes:
+    def __init__(self, docs: Dict = None, dataset_size: str = None, num_words: int = 200000,
+                 max_negatives: int = 10):
+        if not docs:
             if dataset_size:
-                self.recipes = load_recipes(dataset_size)
+                self.docs = load_recipes(dataset_size)
             else:
-                self.recipes = load_raw_recipes()
+                self.docs = load_raw_recipes()
         else:
-            self.recipes = recipes
+            self.docs = docs
         self.num_words: int = num_words
         self.tokenizer: Optional[Tokenizer] = None
         self.encoder: Dict[str, LabelEncoder] = {}
         self.max_negatives: int = max_negatives
+
+    @property
+    def doc_id_encoder(self) -> LabelEncoder:
+        return self.encoder['doc_id']
 
     @property
     def total_words(self) -> int:
@@ -109,19 +114,24 @@ class DataProcessor(abc.ABC):
 
 class ConcatDataProcessor(DataProcessor):
     def process_df(self, df: DataFrame) -> None:
+        df['doc_id'] = df['doc_id'].astype(np.int64)
         df['query'] = df['query'].astype(str)
-        df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
-        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
+        df['title'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['title']).astype(str)
+        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['ingredients'])
         df['ingredients'] = df['ingredients'].apply(lambda x: ' '.join(x))
         df['description'] = df['doc_id'].apply(
-            lambda doc_id: self.recipes[doc_id]['story_or_description'])
+            lambda doc_id: self.docs[doc_id]['story_or_description'])
         df['description'].fillna('', inplace=True)
-        df['author'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['user_id'])
-        df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
+        df['author'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['user_id'])
+        df['country'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['country'])
         df['label'] = df['label'].astype(float)
 
     def fit(self, df: DataFrame) -> None:
         self.process_df(df)
+
+        self.encoder['doc_id'] = LabelEncoder()
+        doc_ids = [doc_id for doc_id in self.docs] + [-1]
+        self.encoder['doc_id'].fit(doc_ids)
 
         sentences = set()
         sentences |= set(df['query'])
@@ -145,6 +155,10 @@ class ConcatDataProcessor(DataProcessor):
     def process_batch(self, df: DataFrame) -> Tuple[Dict, List[int]]:
         df = df.copy()
         self.process_df(df)
+
+        df['doc_id'] = df['doc_id'].apply(lambda c: c if c in self.encoder['doc_id'].classes_ else -1)
+        df['doc_id'] = self.encoder['doc_id'].transform(df['doc_id'])
+        doc_id = df['doc_id'].to_numpy()
 
         df['query'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
         df['title'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
@@ -190,6 +204,7 @@ class ConcatDataProcessor(DataProcessor):
         label = df['label'].to_numpy()
 
         return {
+                   'doc_id': doc_id,
                    'query': query,
                    'title': title,
                    'ingredients': ingredients,
@@ -201,18 +216,23 @@ class ConcatDataProcessor(DataProcessor):
 
 class MultiInstanceDataProcessor(DataProcessor):
     def process_df(self, df: DataFrame) -> None:
+        df['doc_id'] = df['doc_id'].astype(np.int64)
         df['query'] = df['query'].astype(str)
-        df['title'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['title']).astype(str)
-        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['ingredients'])
+        df['title'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['title']).astype(str)
+        df['ingredients'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['ingredients'])
         df['description'] = df['doc_id'].apply(
-            lambda doc_id: self.recipes[doc_id]['story_or_description'])
+            lambda doc_id: self.docs[doc_id]['story_or_description'])
         df['description'].fillna('', inplace=True)
-        df['author'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['user_id'])
-        df['country'] = df['doc_id'].apply(lambda doc_id: self.recipes[doc_id]['country'])
+        df['author'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['user_id'])
+        df['country'] = df['doc_id'].apply(lambda doc_id: self.docs[doc_id]['country'])
         df['label'] = df['label'].astype(float)
 
     def fit(self, df: DataFrame) -> None:
         self.process_df(df)
+
+        self.encoder['doc_id'] = LabelEncoder()
+        doc_ids = [doc_id for doc_id in self.docs] + [-1]
+        self.encoder['doc_id'].fit(doc_ids)
 
         sentences = set()
         sentences |= set(df['query'])
@@ -236,6 +256,10 @@ class MultiInstanceDataProcessor(DataProcessor):
     def process_batch(self, df: DataFrame) -> Tuple[Dict, List[int]]:
         df = df.copy()
         self.process_df(df)
+
+        df['doc_id'] = df['doc_id'].apply(lambda c: c if c in self.encoder['doc_id'].classes_ else -1)
+        df['doc_id'] = self.encoder['doc_id'].transform(df['doc_id'])
+        doc_id = df['doc_id'].to_numpy()
 
         df['query'] = self.tokenizer.texts_to_sequences(df['query'].tolist())
         df['title'] = self.tokenizer.texts_to_sequences(df['title'].tolist())
@@ -280,6 +304,7 @@ class MultiInstanceDataProcessor(DataProcessor):
         label = df['label'].to_numpy()
 
         return {
+                   'doc_id': doc_id,
                    'query': query,
                    'title': title,
                    'ingredients': ingredients,

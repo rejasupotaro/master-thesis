@@ -1,6 +1,6 @@
 import json
-import os
 import pickle
+from collections import defaultdict
 from pathlib import Path
 from typing import Set, Dict
 
@@ -8,7 +8,7 @@ project_dir = Path(__file__).resolve().parents[2]
 
 
 def load_raw_recipes() -> Dict:
-    recipes = {}
+    recipes = defaultdict(dict)
     with open(f'{project_dir}/data/raw/recipes.json') as file:
         keys = [
             'recipe_id',
@@ -20,11 +20,9 @@ def load_raw_recipes() -> Dict:
             'steps',
         ]
         raw_recipes = json.load(file)
-        for raw_recipe in raw_recipes:
-            data = {}
+        for recipe_id in raw_recipes:
             for key in keys:
-                data[key] = raw_recipe[key]
-            recipes[data['recipe_id']] = data
+                recipes[int(recipe_id)][key] = raw_recipes[recipe_id][key]
     return recipes
 
 
@@ -43,8 +41,3 @@ def load_available_recipe_ids() -> Set[int]:
         for recipe in recipes:
             recipe_ids.add(recipe['recipe_id'])
     return recipe_ids
-
-
-if __name__ == '__main__':
-    recipes = load_recipes(size='small')
-    print(len(recipes))

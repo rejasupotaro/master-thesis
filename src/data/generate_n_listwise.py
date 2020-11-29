@@ -37,11 +37,15 @@ def generate_listwise(i: int, interactions_df: DataFrame, recipes: Dict, train: 
             query = row['query']
             if counter[query] > max_positives_per_query:
                 break
+            if not row['fetched_recipe_ids'] or row['fetched_recipe_ids'] == '[]':
+                break
             example['query'] = query
             positive_doc_id = row['recipe_id']
             if 'docs' not in example:
                 example['docs'] = []
-            new_doc_ids = [int(doc_id) for doc_id in row['fetched_recipe_ids'].split(',')]
+            fetched_recipe_ids = str(row['fetched_recipe_ids'])
+            fetched_recipe_ids = fetched_recipe_ids.replace('[', '').replace(']', '').split(',')
+            new_doc_ids = [int(doc_id) for doc_id in fetched_recipe_ids]
             new_doc_ids = new_doc_ids[:row['position'] + 1]
             doc_ids = {doc['doc_id']: i for i, doc in enumerate(example['docs'])}
             recipe_ids.extend([doc['doc_id'] for doc in example['docs']])
@@ -56,7 +60,7 @@ def generate_listwise(i: int, interactions_df: DataFrame, recipes: Dict, train: 
                         'doc_id': doc_id,
                         'label': 1 if doc_id == positive_doc_id else 0
                     })
-            if example['docs'][-1]['label'] == 0:
+            if len(example['docs']) > 0 and example['docs'][-1]['label'] == 0:
                 example['docs'].pop()
         counter[query] += 1
         if counter[query] > max_positives_per_query:
@@ -85,13 +89,14 @@ def generate(n_splits: int = 10, frac: float = 0.6, train_size: float = 0.75):
     """
     logger.info('Load recipes')
     recipes = load_raw_recipes()
-    usecols = ['event_time', 'session_id', 'recipe_id', 'position', 'query', 'page', 'fetched_recipe_ids']
+    usecols = ['started_at', 'session_id', 'country', 'recipe_id', 'position', 'query', 'page', 'fetched_recipe_ids']
     interactions_df = pd.read_csv(f'{project_dir}/data/raw/interactions.csv', usecols=usecols)
     # Note that the original dataset contains invalid recipe IDs (-1)
+    interactions_df.dropna(inplace=True)
     interactions_df = interactions_df[interactions_df['recipe_id'] != -1]
     interactions_df = interactions_df[interactions_df['page'] == 1]
-    interactions_df = interactions_df[~interactions_df['session_id'].isna()]
-    interactions_df = interactions_df.sort_values(by='event_time', ascending=False)
+    interactions_df = interactions_df[interactions_df['country'] == 'US']
+    interactions_df = interactions_df.sort_values(by='started_at', ascending=False)
 
     interactions_df['query'] = interactions_df['query'].apply(preprocess_query)
 
@@ -105,7 +110,7 @@ def generate(n_splits: int = 10, frac: float = 0.6, train_size: float = 0.75):
             ith = i - 1
             logger.info(f'Genereate dataset ({ith})')
             df = df.sample(frac=frac)
-            df = df.sort_values(by='event_time', ascending=True)
+            df = df.sort_values(by='started_at', ascending=True)
             train_df, val_df = train_test_split(df, train_size=train_size, shuffle=False)
 
             train_dataset_size = generate_listwise(ith, train_df, recipes, train=True)
