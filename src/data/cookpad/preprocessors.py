@@ -10,7 +10,9 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tqdm import tqdm
 
-from src.data.recipes import load_recipes, load_raw_recipes
+from src.data.cookpad.recipes import load_recipes, load_raw_recipes
+
+project_dir = Path(__file__).resolve().parents[3]
 
 
 class DataProcessor(abc.ABC):
@@ -45,7 +47,6 @@ class DataProcessor(abc.ABC):
         return len(self.encoder['country'].classes_)
 
     def listwise_to_pairs(self, listwise_filename: str) -> DataFrame:
-        project_dir = Path(__file__).resolve().parents[2]
         with open(f'{project_dir}/data/processed/{listwise_filename}', 'rb') as file:
             dataset = pickle.load(file)
 

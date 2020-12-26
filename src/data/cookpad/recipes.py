@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Set, Dict
 
-project_dir = Path(__file__).resolve().parents[2]
+project_dir = Path(__file__).resolve().parents[3]
 
 
 def load_raw_recipes() -> Dict:

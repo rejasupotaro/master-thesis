@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-from src.data.preprocessors import DataProcessor
+from src.data.cookpad.preprocessors import DataProcessor
 
 
 class BaseModel(abc.ABC):

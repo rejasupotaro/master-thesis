@@ -13,8 +13,8 @@ from pandas import DataFrame
 
 from src import config
 from src.data.cloud_storage import CloudStorage
-from src.data.preprocessors import ConcatDataProcessor
-from src.data.recipes import load_raw_recipes
+from src.data.cookpad.preprocessors import ConcatDataProcessor
+from src.data.cookpad.recipes import load_raw_recipes
 from src.evaluation import evaluate_ranking_model
 from src.training import train_ranking_model
 

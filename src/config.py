@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Type, Tuple
 
-from src.data.preprocessors import ConcatDataProcessor
-from src.data.preprocessors import DataProcessor
+from src.data.cookpad.preprocessors import ConcatDataProcessor
+from src.data.cookpad.preprocessors import DataProcessor
 from src.models import fm, naive, nrmf, representation
 from src.models.base_model import BaseModel
 

@@ -11,10 +11,10 @@ from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from src.data.queries import preprocess_query
-from src.data.recipes import load_raw_recipes
+from src.data.cookpad.queries import preprocess_query
+from src.data.cookpad.recipes import load_raw_recipes
 
-project_dir = Path(__file__).resolve().parents[2]
+project_dir = Path(__file__).resolve().parents[3]
 
 
 def generate_listwise(i: int, interactions_df: DataFrame, recipes: Dict, train: bool,

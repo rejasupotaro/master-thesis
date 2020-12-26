@@ -4,7 +4,7 @@ from typing import Tuple, Dict, List
 from pandas import DataFrame
 from tensorflow import keras
 
-from src.data.preprocessors import DataProcessor
+from src.data.cookpad.preprocessors import DataProcessor
 
 
 class DataGenerator(keras.utils.Sequence):
