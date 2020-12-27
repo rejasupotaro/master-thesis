@@ -3,7 +3,7 @@ from typing import Tuple
 from src.config.base_configs import TrainConfig, EvalConfig
 from src.data.cookpad.preprocessors import ConcatDataProcessor
 from src.data.cookpad.preprocessors import DataProcessor
-from src.models import fm, naive, nrmf, representation
+from src.models.cookpad import fm, naive, nrmf, representation
 
 
 def ebr_config(dataset_id: str, epochs: int, data_processor: DataProcessor) -> Tuple[TrainConfig, EvalConfig]:

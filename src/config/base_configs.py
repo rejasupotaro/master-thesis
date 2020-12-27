@@ -29,4 +29,5 @@ class EvalConfig:
     verbose: int = 1
 
     def __post_init__(self):
+        self.dataset = f'listwise.{self.dataset_id}'
         self.dataset_processor_filename = f'concat_data_processor.{self.dataset_id}'
