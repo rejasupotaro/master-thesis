@@ -69,9 +69,9 @@ def generate_listwise(i: int, interactions_df: DataFrame, recipes: Dict, train: 
             dataset[key] = example
     dataset = list(dataset.values())
     if train:
-        filename = f'listwise.{i}.train.pkl'
+        filename = f'listwise.cookpad.{i}.train.pkl'
     else:
-        filename = f'listwise.{i}.val.pkl'
+        filename = f'listwise.cookpad.{i}.val.pkl'
     with open(f'{project_dir}/data/processed/{filename}', 'wb') as file:
         pickle.dump(dataset, file)
     return len(dataset)

@@ -8,7 +8,7 @@ from pandas import DataFrame
 from tensorflow import keras
 from tqdm import tqdm
 
-from src.config import EvalConfig
+from src.config.base_configs import EvalConfig
 from src.layers.bias import AddBias0
 from src.layers.interaction import WeightedQueryFieldInteraction, WeightedFeatureInteraction, \
     WeightedSelectedFeatureInteraction

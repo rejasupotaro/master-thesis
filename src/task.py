@@ -11,29 +11,17 @@ import tensorflow as tf
 from loguru import logger
 from pandas import DataFrame
 
-from src import config
+from src.config import config
 from src.data.cloud_storage import CloudStorage
-from src.data.cookpad.preprocessors import ConcatDataProcessor
-from src.data.cookpad.recipes import load_raw_recipes
 from src.evaluation import evaluate_ranking_model
 from src.training import train_ranking_model
 
 project_dir = Path(__file__).resolve().parents[1]
 
 
-def run_experiment(model_name: str, dataset_id: int, epochs: int, batch_size: int, recipes: Dict) -> Tuple[Dict, float]:
-    data_processor = ConcatDataProcessor(recipes)
-    train_config, eval_config = {
-        'ebr': config.ebr_config,
-        'naive': config.naive_config,
-        'nrmf_simple_query': config.nrmf_simple_query_config,
-        'nrmf_simple_all': config.nrmf_simple_all_config,
-        'nrmf_simple_query_with_1st': config.nrmf_simple_query_with_1st_config,
-        'fwfm_query': config.fwfm_query_config,
-        'fwfm_all': config.fwfm_all_config,
-        'fwfm_selected': config.fwfm_selected_config,
-        'fwfm_all_without_1st': config.fwfm_all_without_1st_config,
-    }[model_name](dataset_id, epochs, data_processor)
+def run_experiment(dataset: str, dataset_id: int, model_name: str, epochs: int, batch_size: int, docs: Dict) -> Tuple[
+    Dict, float]:
+    train_config, eval_config = config.get_config(dataset, dataset_id, model_name, epochs, docs)
 
     logger.info('Train model')
     history = train_ranking_model(train_config, batch_size)
@@ -47,14 +35,19 @@ def run_experiment(model_name: str, dataset_id: int, epochs: int, batch_size: in
 @click.option('--job-dir', type=str)
 @click.option('--bucket-name', type=str)
 @click.option('--env', type=str)
+@click.option('--dataset', type=str)
 @click.option('--dataset-id', type=str)
 @click.option('--model-name', type=str)
 @click.option('--epochs', type=int)
 @click.option('--batch-size', type=int)
-def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: str, epochs: int, batch_size: int):
+def main(job_dir: str, bucket_name: str, env: str, dataset: str, dataset_id: str, model_name: str, epochs: int,
+         batch_size: int):
     logger.add(sys.stdout, format='{time} {level} {message}')
     log_filepath = f'{project_dir}/logs/{int(time())}.log'
     logger.add(log_filepath)
+
+    if dataset not in ['cookpad', 'msmarco']:
+        raise Exception(f'Unknown dataset is specified: {dataset}')
 
     if env == 'cloud':
         tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
@@ -83,22 +76,31 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
         Path(f'{project_dir}/models').mkdir(exist_ok=True)
         filepaths = []
         for dataset_id in dataset_ids:
-            filepaths.append(f'data/processed/listwise.{dataset_id}.train.pkl')
-            filepaths.append(f'data/processed/listwise.{dataset_id}.val.pkl')
-        filepaths.append('data/raw/recipes.json')
+            filepaths.append(f'data/processed/listwise.{dataset}.{dataset_id}.train.pkl')
+            filepaths.append(f'data/processed/listwise.{dataset}.{dataset_id}.val.pkl')
+
+        if dataset == 'cookpad':
+            filepaths.append('data/raw/docs.json')
+        else:
+            filepaths.append('data/raw/msmarco-docs.tsv.gz')
         for filepath in filepaths:
             source = filepath
             destination = f'{project_dir}/{source}'
             logger.info(f'Download {source} to {destination}')
             bucket.download(source, destination)
 
-    logger.info(f'Load recipes')
-    recipes = load_raw_recipes()
+    logger.info(f'Load docs')
+    if dataset == 'cookpad':
+        from src.data.cookpad.recipes import load_raw_recipes
+        docs = load_raw_recipes()
+    else:
+        from src.data.msmarco.docs import load_raw_docs
+        docs = load_raw_docs()
 
     results = []
     for dataset_id in dataset_ids:
-        logger.info(f'Run an experiment on {model_name} with dataset: {dataset_id}')
-        history, ndcg_score = run_experiment(model_name, dataset_id, epochs, batch_size, recipes)
+        logger.info(f'Run an experiment on {model_name} with dataset: {dataset}.{dataset_id}')
+        history, ndcg_score = run_experiment(dataset, dataset_id, model_name, epochs, batch_size, docs)
         results.append({
             'dataset_id': dataset_id,
             'model': model_name,
@@ -108,11 +110,11 @@ def main(job_dir: str, bucket_name: str, env: str, dataset_id: str, model_name: 
         gc.collect()
     results_df = DataFrame(results)
     logger.info(results_df)
-    results_df.to_csv(f'{project_dir}/logs/{model_name}_results.csv', index=False)
+    results_df.to_csv(f'{project_dir}/logs/{dataset}_{model_name}_results.csv', index=False)
 
     if env == 'cloud' and job_name == 'chief':
         for filepath in [
-            f'logs/{model_name}_results.csv'
+            f'logs/{dataset}_{model_name}_results.csv'
         ]:
             source = f'{project_dir}/{filepath}'
             destination = filepath

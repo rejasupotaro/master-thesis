@@ -13,8 +13,10 @@ class BaseModel(abc.ABC):
     def __init__(self, data_processor: DataProcessor, embedding_dim: int = 32):
         self.doc_id_encoder = data_processor.doc_id_encoder
         self.total_words = data_processor.total_words
-        self.total_authors = data_processor.total_authors
-        self.total_countries = data_processor.total_countries
+        if hasattr(data_processor, 'total_authors'):
+            self.total_authors = data_processor.total_authors
+        if hasattr(data_processor, 'total_countries'):
+            self.total_countries = data_processor.total_countries
         self.embedding_dim = embedding_dim
 
     @property
@@ -42,6 +44,12 @@ class BaseModel(abc.ABC):
 
     def new_country_input(self, size=1):
         return tf.keras.Input(shape=(size,), name='country')
+
+    def new_url_input(self, size=20):
+        return tf.keras.Input(shape=(size,), name='url')
+
+    def new_body_input(self, size=12000):
+        return tf.keras.Input(shape=(size,), name='body')
 
     def load_pretrained_embedding(self, embedding_filepath: str, embedding_dim: int, name: str) -> layers.Embedding:
         df = pd.read_pickle(embedding_filepath)

@@ -7,7 +7,7 @@ import tensorflow as tf
 from loguru import logger
 from tensorflow import keras
 
-from src.config import TrainConfig
+from src.config.base_configs import TrainConfig
 from src.data.data_generator import DataGenerator
 from src.losses import pairwise_losses
 
