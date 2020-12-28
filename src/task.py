@@ -23,7 +23,7 @@ def run_experiment(dataset: str, dataset_id: int, model_name: str, epochs: int, 
     Dict, float]:
     train_config, eval_config = config.get_config(dataset, dataset_id, model_name, epochs, docs)
 
-    logger.info('Train model')
+    logger.info(f'Train model ({model_name})')
     history = train_ranking_model(train_config, batch_size)
 
     logger.info('Evaluate model')

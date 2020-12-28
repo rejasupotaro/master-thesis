@@ -28,10 +28,11 @@ class CloudStorage:
 if __name__ == '__main__':
     cloud_storage = CloudStorage()
 
+    dataset = 'msmarco'
     filepaths = []
     for i in range(10):
-        filepaths.append(f'data/processed/listwise.{i}.train.pkl')
-        filepaths.append(f'data/processed/listwise.{i}.val.pkl')
+        filepaths.append(f'data/processed/listwise.{dataset}.{i}.train.pkl')
+        filepaths.append(f'data/processed/listwise.{dataset}.{i}.val.pkl')
 
     for filepath in filepaths:
         source = f'{project_dir}/{filepath}'
