@@ -89,7 +89,6 @@ def generate(n_splits: int = 10, frac: float = 0.6, train_size: float = 0.75):
         if len(df) == step:
             ith = i - 1
             logger.info(f'Genereate dataset ({ith})')
-            df = df.sample(frac=frac)
             train_df, val_df = train_test_split(df, train_size=train_size, shuffle=False)
 
             train_dataset_size = generate_listwise(ith, train_df, qrels_df, train=True)
@@ -109,14 +108,14 @@ def generate(n_splits: int = 10, frac: float = 0.6, train_size: float = 0.75):
     dataset_size_df = DataFrame(rows)
     logger.info(dataset_size_df)
     # i  train  val
-    # 0  34030  15533
-    # 1  33038  15441
-    # 2  32410  15374
-    # 3  34979  15927
-    # 4  34519  15798
-    # 5  33413  15573
-    # 6  32124  15956
-    # 7  32812  14153
-    # 8  31042  12127
-    # 9  34845  14748
+    # 0  27526  9177
+    # 1  27526  9177
+    # 2  27527  9176
+    # 3  27527  9176
+    # 4  27527  9177
+    # 5  27527  9176
+    # 6  27527  9176
+    # 7  27527  9176
+    # 8  27527  9176
+    # 9  27527  9176
     logger.info('Done')
