@@ -1,0 +1,11 @@
+dataset_id,model,val_loss,ndcg
+0,nrmf_simple_all_with_1st,0.5655054357624794,0.6552
+1,nrmf_simple_all_with_1st,0.5644313758752477,0.645
+2,nrmf_simple_all_with_1st,0.5621327895020681,0.6465
+3,nrmf_simple_all_with_1st,0.5756150067798675,0.6395
+4,nrmf_simple_all_with_1st,0.5778185375153072,0.6444
+5,nrmf_simple_all_with_1st,0.5862719321250915,0.6435
+6,nrmf_simple_all_with_1st,0.5906319338541764,0.6369
+7,nrmf_simple_all_with_1st,0.5824373644010156,0.648
+8,nrmf_simple_all_with_1st,0.5771690069460401,0.6482
+9,nrmf_simple_all_with_1st,0.5822401139579836,0.6504
