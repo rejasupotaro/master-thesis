@@ -24,10 +24,10 @@ def run_experiment(dataset: str, dataset_id: int, model_name: str, epochs: int, 
     train_config, eval_config = config.get_config(dataset, dataset_id, model_name, epochs, docs)
 
     logger.info(f'Train model ({model_name})')
-    history = train_ranking_model(train_config, batch_size)
+    model, history = train_ranking_model(train_config, batch_size)
 
     logger.info('Evaluate model')
-    ndcg_score = evaluate_ranking_model(eval_config)
+    ndcg_score = evaluate_ranking_model(eval_config, model)
     return history, ndcg_score
 
 
@@ -80,7 +80,8 @@ def main(job_dir: str, bucket_name: str, env: str, dataset: str, dataset_id: str
             filepaths.append(f'data/processed/listwise.{dataset}.{dataset_id}.val.pkl')
 
         if dataset == 'cookpad':
-            filepaths.append('data/raw/docs.json')
+            filepaths.append('data/raw/recipes.json')
+            filepaths.append(f'data/raw/en_2020-03-16T00_04_34_recipe_image_tagspace5000_300.pkl')
         else:
             filepaths.append('data/raw/msmarco-docs.tsv.gz')
         for filepath in filepaths:

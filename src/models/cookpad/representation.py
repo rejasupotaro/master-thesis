@@ -1,7 +1,11 @@
+from pathlib import Path
+
 import tensorflow as tf
 from tensorflow.keras import layers
 
 from src.models.base_model import BaseModel
+
+project_dir = Path(__file__).resolve().parents[3]
 
 
 class EBR(BaseModel):
@@ -22,23 +26,31 @@ class EBR(BaseModel):
         ingredients_input = self.new_ingredients_input()
         description_input = self.new_description_input()
         country_input = self.new_country_input()
-        inputs = [title_input, ingredients_input, description_input, country_input]
+        doc_id_input = self.new_doc_id_input()
+        inputs = [title_input, ingredients_input, description_input, country_input, doc_id_input]
 
-        title = embedding(title_input)
-        ingredients = embedding(ingredients_input)
-        description = embedding(description_input)
-        country = layers.Embedding(self.total_countries, self.embedding_dim)(country_input)
-
-        title = layers.GlobalMaxPooling1D()(title)
-        ingredients = layers.GlobalMaxPooling1D()(ingredients)
-        description = layers.GlobalMaxPooling1D()(description)
+        title = layers.GlobalMaxPooling1D()(embedding(title_input))
+        ingredients = layers.GlobalMaxPooling1D()(embedding(ingredients_input))
+        description = layers.GlobalMaxPooling1D()(embedding(description_input))
+        country_embedding = layers.Embedding(self.total_countries, self.embedding_dim)
+        country = country_embedding(country_input)
         country = tf.reshape(country, shape=(-1, self.embedding_dim,))
+        image_embedding = self.load_pretrained_embedding(
+            embedding_filepath=f'{project_dir}/data/raw/en_2020-03-16T00_04_34_recipe_image_tagspace5000_300.pkl',
+            embedding_dim=300,
+            name='image_embedding'
+        )
+        image = image_embedding(doc_id_input)
+        image = tf.reshape(image, shape=(-1, 300,))
+        image = layers.Dropout(.2)(image)
+        image = layers.Dense(self.embedding_dim)(image)
 
         encoded_recipe = layers.concatenate([
             title,
             ingredients,
             description,
-            country
+            country,
+            image,
         ])
         encoded_recipe = layers.Dense(self.embedding_dim, activation='relu')(encoded_recipe)
 

@@ -28,7 +28,7 @@ class CloudStorage:
 if __name__ == '__main__':
     cloud_storage = CloudStorage()
 
-    dataset = 'msmarco'
+    dataset = 'cookpad'
     filepaths = []
     for i in range(10):
         filepaths.append(f'data/processed/listwise.{dataset}.{i}.train.pkl')

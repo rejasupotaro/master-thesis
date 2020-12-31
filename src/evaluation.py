@@ -14,6 +14,7 @@ from src.layers.interaction import WeightedQueryFieldInteraction, WeightedFeatur
     WeightedSelectedFeatureInteraction
 from src.losses import pairwise_losses
 from src.metrics import metrics
+from src.models.base_model import BaseModel
 
 project_dir = Path(__file__).resolve().parents[1]
 
@@ -42,17 +43,18 @@ def predict(model, dataset, data_processor, verbose=1) -> float:
     return ndcg_score
 
 
-def evaluate_ranking_model(config: EvalConfig) -> float:
-    logger.info('Load model')
-    filepath = f'{project_dir}/models/{config.model_name}.h5'
-    custom_objects = {
-        'cross_entropy_loss': pairwise_losses.cross_entropy_loss,
-        'WeightedQueryFieldInteraction': WeightedQueryFieldInteraction,
-        'WeightedFeatureInteraction': WeightedFeatureInteraction,
-        'WeightedSelectedFeatureInteraction': WeightedSelectedFeatureInteraction,
-        'AddBias0': AddBias0,
-    }
-    model = keras.models.load_model(filepath, custom_objects=custom_objects)
+def evaluate_ranking_model(config: EvalConfig, model: BaseModel = None) -> float:
+    if not model:
+        logger.info('Load model')
+        filepath = f'{project_dir}/models/{config.model_name}.h5'
+        custom_objects = {
+            'cross_entropy_loss': pairwise_losses.cross_entropy_loss,
+            'WeightedQueryFieldInteraction': WeightedQueryFieldInteraction,
+            'WeightedFeatureInteraction': WeightedFeatureInteraction,
+            'WeightedSelectedFeatureInteraction': WeightedSelectedFeatureInteraction,
+            'AddBias0': AddBias0,
+        }
+        model = keras.models.load_model(filepath, custom_objects=custom_objects)
 
     logger.info('Load val dataset')
     with open(f'{project_dir}/models/{config.data_processor_filename}.pkl', 'rb') as file:

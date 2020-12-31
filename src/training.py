@@ -58,6 +58,6 @@ def train_ranking_model(config: TrainConfig, batch_size: int) -> Dict:
     )
 
     logger.info('Save model')
-    model.save(f'{project_dir}/models/{model.name}.h5')
+    # model.save(f'{project_dir}/models/{model.name}.h5')
 
-    return history.history
+    return model, history.history
