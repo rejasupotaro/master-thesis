@@ -1,8 +1,5 @@
 # Study on Feature Interactions in Multiple Field Document Ranking
 
-## Abstract
-
-
 In this thesis, I discuss document ranking models for modern search applications from the relationship between the ranking task and the recommendation task. I hypothesized that the multi-field document ranking task is located somewhere between single-field document ranking and recommendation. If this hypothesis is correct, we can employ techniques to capture text matching signals from information retrieval and techniques to combine multiple evidence from recommender systems. The key contributions of this project are as follows:
 
 - I reviewed the entire history of information retrieval from an academic and industrial perspective, and discussed the similarity between document ranking and item recommendation.
@@ -18,7 +15,7 @@ Experiments are conducted using a proprietary dataset obtained from [Cookpad](ht
 ### Local
 
 ```
-$ poetry run invoke generate-listwise
+$ poetry run invoke generate-listwise-cookpad
 ```
 
 ### Inside Container 
@@ -31,14 +28,16 @@ $ sudo docker run --mount src="$(pwd)/data",dst=/workspace/data,type=bind -it ma
 ### AI Platform
 
 ```
+ENV = 'cloud'
 BUCKET_NAME = os.getenv('BUCKET_NAME')
 REGION = os.getenv('REGION')
-timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-JOB_NAME = f'trainer_{timestamp}'
+DATASET = 'cookpad'
+MODEL_NAME = 'fwfm'
+JOB_NAME = f'trainer_{DATASET}_{MODEL_NAME}_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}'
 JOB_DIR = f'gs://{BUCKET_NAME}/job'
-MODEL_NAME = 'naive'
-DATASET_SIZE = 'small'
-EPOCHS = 10
+DATASET_ID = '0-9'
+EPOCHS = 8
+BATCH_SIZE = 2048
 
 !gcloud ai-platform jobs submit training $JOB_NAME \
   --package-path ../src \
@@ -47,11 +46,16 @@ EPOCHS = 10
   --python-version 3.7 \
   --runtime-version 2.1 \
   --job-dir $JOB_DIR \
-  --stream-logs \
   --config ../ai_platform_config.yml \
   -- \
   --bucket-name $BUCKET_NAME \
+  --env $ENV \
+  --dataset $DATASET \
+  --dataset-id $DATASET_ID \
   --model-name $MODEL_NAME \
-  --dataset-size $DATASET_SIZE \
-  --epochs $EPOCHS
+  --epochs $EPOCHS \
+  --batch-size $BATCH_SIZE```
+```
+```
+!gcloud beta ai-platform jobs stream-logs $JOB_NAME --polling-interval=180
 ```
